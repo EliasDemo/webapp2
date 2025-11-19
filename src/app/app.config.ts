@@ -25,7 +25,7 @@ export const appConfig: ApplicationConfig = {
     { provide: HTTP_INTERCEPTORS, useClass: LoadingInterceptor,  multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor,    multi: true },
 
-    // 👉 AQUÍ se decide la URL del backend para toda la app
+    // 👇 AQUÍ fijamos la URL base del backend
     { provide: API_URL, useValue: environment.apiUrl },
 
     provideAnimations(),

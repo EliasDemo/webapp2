@@ -1,3 +1,4 @@
+// src/app/features/auth/data-access/auth.api.ts
 import { inject, Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, finalize, tap } from 'rxjs';
@@ -10,6 +11,8 @@ import {
   UserSummary,
   AcademicoSummary,
 } from './auth.models';
+
+// 👇 ESTE IMPORT ES CLAVE
 import { API_URL } from '../../../core/tokens/api-url.token';
 
 type Session = {
@@ -33,7 +36,6 @@ export class AuthApi {
   readonly isLoggedIn = computed(() => !!this._session().token);
 
   constructor() {
-    // Solo para depurar; bórralo cuando quieras
     console.log('[AuthApi] API base:', this.base);
   }
 
@@ -56,7 +58,6 @@ export class AuthApi {
 
   logout(): Observable<{ ok: boolean; message: string }> {
     return this.http.post<{ ok: boolean; message: string }>(`${this.base}/auth/logout`, {}).pipe(
-      // si falla el logout del servidor, igual limpiamos sesión
       catchError(() =>
         this.http.post<{ ok: boolean; message: string }>(`${this.base}/auth/logout`, {}),
       ),
