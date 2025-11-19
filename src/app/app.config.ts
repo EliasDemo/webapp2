@@ -1,4 +1,3 @@
-// src/app/app.config.ts
 import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
@@ -13,24 +12,26 @@ import { AuthInterceptor } from './core/http/auth.interceptor';
 import { LoadingInterceptor } from './core/http/loading.interceptor';
 import { ErrorInterceptor } from './core/http/error.interceptor';
 
+import { environment } from '../environments/environment';  // 👈 IMPORT CORRECTO
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZonelessChangeDetection(),
     provideRouter(routes),
 
-    // HttpClient + interceptores DI
     provideHttpClient(withInterceptorsFromDi()),
     { provide: HTTP_INTERCEPTORS, useClass: LanguageInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor,     multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: LoadingInterceptor,  multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor,    multi: true },
 
-    // Config
-    { provide: API_URL, useValue: '/api' },
-    // Angular Material
-    provideAnimations(),
+    // 🔥 ESTA ERA LA LÍNEA QUE ROMPÍA TODO 🔥
+    // { provide: API_URL, useValue: '/api' },
 
-    // i18n (Transloco)
+    // 🔥 ESTA ES LA LÍNEA CORRECTA 🔥
+    { provide: API_URL, useValue: environment.apiUrl },
+
+    provideAnimations(),
     ...provideI18n,
   ],
 };

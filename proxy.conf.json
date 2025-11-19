@@ -1,6 +1,6 @@
 {
   "/api": {
-    "target": "https://192.168.0.198",
+    "target": "https://apiproyecto-production-39fa.up.railway.app",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
