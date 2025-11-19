@@ -1,7 +1,6 @@
 import { Inject, Injectable, Optional } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { API_URL } from '../../../core/tokens/api-url.token';
 import {
   VmEvento,
   EventoFilter,
@@ -19,6 +18,7 @@ import {
   VmMisEventosPeriodo,
   VmEventoAlumnoItem,
 } from '../models/ev.models';
+import { API_URL } from '../../../core/tokens/api-url.token';
 
 export type ApiResponse<T> = { ok: boolean; data: T; meta?: any };
 export type Page<T> = { items?: T[]; total?: number };

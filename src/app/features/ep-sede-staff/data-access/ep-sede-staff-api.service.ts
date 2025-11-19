@@ -2,7 +2,6 @@
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map, catchError, of } from 'rxjs';
-import { API_URL } from '../../../core/tokens/api-url.token';
 
 import {
   ApiResponse,
@@ -19,6 +18,7 @@ import {
   EpSedeStaffCreateAndAssignResponse,
   EpSedeStaffLookupPayload,
 } from '../models/ep-sede-staff.models';
+import { API_URL } from '../../../core/tokens/api-url.token';
 
 @Injectable({ providedIn: 'root' })
 export class EpSedeStaffApiService {

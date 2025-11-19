@@ -2,11 +2,11 @@
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_URL } from '../../../core/tokens/api-url.token';
 import {
   MatriculaImportPayload,
   MatriculaImportResponse,
 } from '../models/m.models';
+import { API_URL } from '../../../core/tokens/api-url.token';
 
 @Injectable({ providedIn: 'root' })
 export class MatriculaApiService {

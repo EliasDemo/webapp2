@@ -9,7 +9,6 @@ import {
   HttpErrorResponse,
 } from '@angular/common/http';
 import { Observable, map, catchError, of, throwError } from 'rxjs';
-import { API_URL } from '../../../core/tokens/api-url.token';
 import {
   ApiResponse,
   AlumnoAgendaResponse,
@@ -51,6 +50,7 @@ import {
   BulkEnrollStats,
   BulkEnrolResponseData,
 } from '../models/proyecto.models';
+import { API_URL } from '../../../core/tokens/api-url.token';
 
 @Injectable({ providedIn: 'root' })
 export class VmApiService {

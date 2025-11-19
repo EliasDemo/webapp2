@@ -1,7 +1,6 @@
 import { Inject, Injectable, Optional } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
-import { API_URL } from '../../../core/tokens/api-url.token';
 import {
   ApiResponse,
   Page,
@@ -21,6 +20,7 @@ import {
   SedeCreatePayload,
   EscuelaProfesionalCreatePayload,
 } from '../models/ad.models';
+import { API_URL } from '../../../core/tokens/api-url.token';
 
 @Injectable({ providedIn: 'root' })
 export class AdApiService {

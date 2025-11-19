@@ -1,4 +1,3 @@
-// src/app/features/vm/lookups/lookups.api.ts
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';

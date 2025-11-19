@@ -1,7 +1,6 @@
 import { inject, Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, finalize, tap } from 'rxjs';
-import { API_URL } from '../../../core/tokens/api-url.token';
 
 import {
   LookupRequest,
@@ -11,6 +10,7 @@ import {
   UserSummary,
   AcademicoSummary,
 } from './auth.models';
+import { API_URL } from '../../../core/tokens/api-url.token';
 
 type Session = {
   token: string | null;
@@ -20,15 +20,10 @@ type Session = {
 
 @Injectable({ providedIn: 'root' })
 export class AuthApi {
-  private http = inject(HttpClient);
-  private base = inject(API_URL);   // 👈 aquí ya viene la URL completa de la API
+  private readonly http = inject(HttpClient);
+  private readonly base = inject(API_URL); // p.ej. https://api.../api
 
-  // (opcional, pero útil para comprobar en consola qué base se usa)
-  constructor() {
-    console.log('🔎 API_URL (AuthApi):', this.base);
-  }
-
-  private _session = signal<Session>({
+  private readonly _session = signal<Session>({
     token: localStorage.getItem('token'),
     user: null,
     academico: null,
@@ -37,8 +32,12 @@ export class AuthApi {
   readonly session = this._session.asReadonly();
   readonly isLoggedIn = computed(() => !!this._session().token);
 
+  constructor() {
+    // Solo para depurar; bórralo cuando quieras
+    console.log('[AuthApi] API base:', this.base);
+  }
+
   lookup(payload: LookupRequest): Observable<LookupResponse> {
-    // POST a {API_URL}/auth/lookup
     return this.http.post<LookupResponse>(`${this.base}/auth/lookup`, payload);
   }
 
@@ -51,7 +50,7 @@ export class AuthApi {
           user: res.user,
           academico: res.academico,
         });
-      })
+      }),
     );
   }
 
@@ -59,9 +58,9 @@ export class AuthApi {
     return this.http.post<{ ok: boolean; message: string }>(`${this.base}/auth/logout`, {}).pipe(
       // si falla el logout del servidor, igual limpiamos sesión
       catchError(() =>
-        this.http.post<{ ok: boolean; message: string }>(`${this.base}/auth/logout`, {})
+        this.http.post<{ ok: boolean; message: string }>(`${this.base}/auth/logout`, {}),
       ),
-      finalize(() => this.clearSession())
+      finalize(() => this.clearSession()),
     );
   }
 

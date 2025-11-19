@@ -1,9 +1,9 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { API_URL } from '../../../core/tokens/api-url.token';
 import { MeResponse, UserDetail } from './user.models';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { API_URL } from '../../../core/tokens/api-url.token';
 
 @Injectable({ providedIn: 'root' })
 export class UserApi {

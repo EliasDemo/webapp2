@@ -2,7 +2,6 @@
 import { Inject, Injectable, Optional } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_URL } from '../../../core/tokens/api-url.token';
 
 import {
   ChangePasswordPayload,
@@ -11,6 +10,7 @@ import {
   SessionsResponse,
   SimpleOkResponse,
 } from '../models/perfil.models';
+import { API_URL } from '../../../core/tokens/api-url.token';
 
 @Injectable({ providedIn: 'root' })
 export class PerfilApiService {

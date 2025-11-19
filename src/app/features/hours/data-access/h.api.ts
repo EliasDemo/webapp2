@@ -1,13 +1,13 @@
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, of } from 'rxjs';
-import { API_URL } from '../../../core/tokens/api-url.token';
 import {
   AvancePorProyectoResponse,
   AvanceProyectoQuery,
   HorasQuery,
   ReporteHorasResponse,
 } from '../models/h.models';
+import { API_URL } from '../../../core/tokens/api-url.token';
 
 @Injectable({ providedIn: 'root' })
 export class HorasApiService {
