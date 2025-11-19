@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
+import { API_URL } from '../../../core/tokens/api-url.token';
 
 type EpSedeRaw = { id: number; label?: string; nombre?: string };
 type PeriodoRaw = {
@@ -23,8 +24,9 @@ function pickItems<T = any>(resp: any): T[] {
 
 @Injectable({ providedIn: 'root' })
 export class LookupsApiService {
-  private http = inject(HttpClient);
-  private base = '/api/lookups';
+  private readonly http = inject(HttpClient);
+  private readonly apiBase = inject(API_URL);                      // p.ej. https://apiproyecto.../api
+  private readonly base = `${this.apiBase.replace(/\/+$/, '')}/lookups`; // → .../api/lookups
 
   /**
    * EP-SEDE visibles para el usuario (como staff).
@@ -39,10 +41,12 @@ export class LookupsApiService {
       .set('limit', String(limit));
 
     return this.http.get<any>(`${this.base}/ep-sedes`, { params }).pipe(
-      map(resp => pickItems<EpSedeRaw>(resp).map(x => ({
-        id: x.id,
-        label: x.label ?? x.nombre ?? `EP ${x.id}`
-      })))
+      map(resp =>
+        pickItems<EpSedeRaw>(resp).map(x => ({
+          id: x.id,
+          label: x.label ?? x.nombre ?? `EP ${x.id}`,
+        })),
+      ),
     );
   }
 
@@ -50,19 +54,25 @@ export class LookupsApiService {
    * Periodos
    * GET /api/lookups/periodos?q=&solo_activos=1|0&limit=50
    */
-  fetchPeriodos(q = '', soloActivos = false, limit = 50): Observable<Array<{ id: number; anio: number; ciclo: string; estado?: string }>> {
+  fetchPeriodos(
+    q = '',
+    soloActivos = false,
+    limit = 50,
+  ): Observable<Array<{ id: number; anio: number; ciclo: string; estado?: string }>> {
     let params = new HttpParams()
       .set('limit', String(limit))
       .set('solo_activos', soloActivos ? '1' : '0');
     if (q) params = params.set('q', q);
 
     return this.http.get<any>(`${this.base}/periodos`, { params }).pipe(
-      map(resp => pickItems<PeriodoRaw>(resp).map(p => ({
-        id: p.id,
-        anio: p.anio,
-        ciclo: String(p.ciclo),
-        estado: p.estado
-      })))
+      map(resp =>
+        pickItems<PeriodoRaw>(resp).map(p => ({
+          id: p.id,
+          anio: p.anio,
+          ciclo: String(p.ciclo),
+          estado: p.estado,
+        })),
+      ),
     );
   }
 }
