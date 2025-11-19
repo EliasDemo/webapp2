@@ -1,3 +1,4 @@
+// src/app/app.config.ts
 import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
@@ -6,13 +7,12 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 
 import { provideI18n } from './core/i18n/i18n.module';
 import { API_URL } from './core/tokens/api-url.token';
+import { environment } from '../environments/environment';
 
 import { LanguageInterceptor } from './core/config/language.interceptor';
 import { AuthInterceptor } from './core/http/auth.interceptor';
 import { LoadingInterceptor } from './core/http/loading.interceptor';
 import { ErrorInterceptor } from './core/http/error.interceptor';
-
-import { environment } from '../environments/environment';  // 👈 IMPORT CORRECTO
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -25,10 +25,7 @@ export const appConfig: ApplicationConfig = {
     { provide: HTTP_INTERCEPTORS, useClass: LoadingInterceptor,  multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor,    multi: true },
 
-    // 🔥 ESTA ERA LA LÍNEA QUE ROMPÍA TODO 🔥
-    // { provide: API_URL, useValue: '/api' },
-
-    // 🔥 ESTA ES LA LÍNEA CORRECTA 🔥
+    // 👉 AQUÍ se decide la URL del backend para toda la app
     { provide: API_URL, useValue: environment.apiUrl },
 
     provideAnimations(),

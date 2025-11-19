@@ -21,7 +21,12 @@ type Session = {
 @Injectable({ providedIn: 'root' })
 export class AuthApi {
   private http = inject(HttpClient);
-  private base = inject(API_URL);
+  private base = inject(API_URL);   // 👈 aquí ya viene la URL completa de la API
+
+  // (opcional, pero útil para comprobar en consola qué base se usa)
+  constructor() {
+    console.log('🔎 API_URL (AuthApi):', this.base);
+  }
 
   private _session = signal<Session>({
     token: localStorage.getItem('token'),
@@ -33,6 +38,7 @@ export class AuthApi {
   readonly isLoggedIn = computed(() => !!this._session().token);
 
   lookup(payload: LookupRequest): Observable<LookupResponse> {
+    // POST a {API_URL}/auth/lookup
     return this.http.post<LookupResponse>(`${this.base}/auth/lookup`, payload);
   }
 
