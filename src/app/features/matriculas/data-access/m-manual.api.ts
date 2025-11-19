@@ -1,13 +1,13 @@
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_URL } from '../../../core/tokens/api-url.token';
 import {
   ManualBuscarResponse,
   RegistrarPayload, RegistrarResponse,
   MatricularPayload, MatricularResponse,
   CambiarEstadoResponse
 } from '../models/m-manual.models';
+import { API_URL } from '../../../core/tokens/api-url.token';
 
 @Injectable({ providedIn: 'root' })
 export class MatriculaManualApiService {
