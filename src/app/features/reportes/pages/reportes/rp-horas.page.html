@@ -25,6 +25,17 @@
 
         <!-- Acciones header -->
         <div class="flex items-center gap-3">
+          <!-- NUEVO: Importar horas históricas SIEMPRE visible en Horas por período -->
+          <button
+            type="button"
+            (click)="irAImportar()"
+            class="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            <i class="fa-solid fa-upload"></i>
+            Importar horas históricas
+          </button>
+
+          <!-- Botón existente: Exportar Excel -->
           <button (click)="exportar()"
                   [disabled]="isLoadingDisabled()"
                   class="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-white px-4 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50">
