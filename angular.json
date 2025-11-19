@@ -17,6 +17,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "outputPath": "browser",
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
@@ -25,8 +26,8 @@
                 "glob": "**/*",
                 "input": "public"
               },
-                "src/assets",
-                "src/favicon.ico"
+              "src/assets",
+              "src/favicon.ico"
             ],
             "styles": [
               "src/styles.scss"
@@ -65,7 +66,6 @@
             "development": {
               "buildTarget": "webapp:build:development",
               "proxyConfig": "proxy.conf.json"
-
             }
           },
           "defaultConfiguration": "development"
