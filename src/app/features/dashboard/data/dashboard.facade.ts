@@ -1,3 +1,4 @@
+// dashboard.facade.ts
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, forkJoin, map, of, switchMap, catchError } from 'rxjs';
 import { ProyectosAlumnoApi } from './proyectos-alumno.api';
@@ -8,11 +9,14 @@ import { DashboardVM, EventoLite, ProyectoLite, SesionLite } from '../models/das
 @Injectable({ providedIn: 'root' })
 export class DashboardFacade {
 
+  // 👉 FLAG: apágalo en ambientes donde el API de eventos no está (o no tienes permisos)
+  // Cuando el backend de eventos esté OK, cámbialo a true (o muévelo a environment.*)
+  private readonly EVENTOS_ENABLED = false;
+
   private _state = new BehaviorSubject<DashboardVM>({
     loading: true,
     error: null,
     contexto: null,
-
     contadores: {
       proyectos_inscritos: 0,
       faltas_eventos: 0,
@@ -20,15 +24,12 @@ export class DashboardFacade {
       horas_acumuladas_min: 0,
       horas_requeridas_min: null
     },
-
     proyectoActual: null,
     proyectosPendientes: [],
     proyectosInscribibles: [],
     proyectosLibres: [],
-
     eventosInscritos: [],
     eventosInscribibles: [],
-
     proximasSesiones: []
   });
 
@@ -46,11 +47,18 @@ export class DashboardFacade {
     const proyectos$ = this.proyectosApi.getResumenAlumno()
       .pipe(catchError(e => of({ ok:false, error: e?.error?.message })));
 
-    const eventosActivos$ = this.eventosApi.getMisEventos('ACTIVOS')
-      .pipe(catchError(e => of({ ok:false, error: e?.error?.message })));
+    // ⛔ NO LLAMAR al API de eventos si el flag está apagado (evita 404/403 y el spam en consola)
+    const eventosActivos$ = this.EVENTOS_ENABLED
+      ? this.eventosApi.getMisEventos('ACTIVOS').pipe(
+          catchError(e => of({ ok:false, error: e?.error?.message }))
+        )
+      : of({ ok: true, data: { eventos: [] } });
 
-    const eventosFuente$ = this.eventosApi.getEventosVigentesMiEpSede()
-      .pipe(catchError(e => of({ ok:false, error: e?.error?.message })));
+    const eventosFuente$ = this.EVENTOS_ENABLED
+      ? this.eventosApi.getEventosVigentesMiEpSede().pipe(
+          catchError(e => of({ ok:false, error: e?.error?.message }))
+        )
+      : of({ ok: true, data: [] });
 
     const horas$ = this.horasApi.obtenerMiReporteHoras()
       .pipe(catchError(e => of({ ok:false, message: e?.message })));
@@ -83,35 +91,37 @@ export class DashboardFacade {
             )
           : of(null);
 
-        const eventosInscritos: EventoLite[] = (evMis?.data?.eventos ?? []).map((e: any) => ({
-          id: e.id,
-          codigo: e.codigo,
-          titulo: e.titulo,
-          subtitulo: e.subtitulo,
-          modalidad: e.modalidad,
-          estado: e.estado,
-          requiere_inscripcion: !!e.requiere_inscripcion,
-          cupo_maximo: e.cupo_maximo ?? null,
-          url_imagen_portada: e.url_imagen_portada ?? null,
-          inscripcion_desde: e.inscripcion_desde ?? null,
-          inscripcion_hasta: e.inscripcion_hasta ?? null,
-          participacion: e.participacion ?? null,
-        }));
+        // Si el flag está apagado, esto viene vacío y el dashboard oculta los bloques de eventos
+        const eventosInscritos: EventoLite[] = (evMis as any)?.data?.eventos
+          ? (evMis as any).data.eventos.map((e: any) => ({
+              id: e.id,
+              codigo: e.codigo,
+              titulo: e.titulo,
+              subtitulo: e.subtitulo,
+              modalidad: e.modalidad,
+              estado: e.estado,
+              requiere_inscripcion: !!e.requiere_inscripcion,
+              cupo_maximo: e.cupo_maximo ?? null,
+              url_imagen_portada: e.url_imagen_portada ?? null,
+              inscripcion_desde: e.inscripcion_desde ?? null,
+              inscripcion_hasta: e.inscripcion_hasta ?? null,
+              participacion: e.participacion ?? null,
+            }))
+          : [];
 
-        const fuenteEventos = (evSrc?.data?.data?.data ?? evSrc?.data?.data ?? evSrc?.data) || [];
-
+        const fuenteEventos = (evSrc as any)?.data?.data?.data ?? (evSrc as any)?.data?.data ?? (evSrc as any)?.data ?? [];
         const eventosInscribibles = fuenteEventos
           .map((raw: any) => raw?.evento || raw)
           .filter((ev: any) => {
-            const req = !!ev.requiere_inscripcion;
-            const desde = ev.inscripcion_desde ? new Date(ev.inscripcion_desde) : null;
-            const hasta = ev.inscripcion_hasta ? new Date(ev.inscripcion_hasta) : null;
+            const req = !!ev?.requiere_inscripcion;
+            const desde = ev?.inscripcion_desde ? new Date(ev.inscripcion_desde) : null;
+            const hasta = ev?.inscripcion_hasta ? new Date(ev.inscripcion_hasta) : null;
             const abierta = (!desde || now >= desde) && (!hasta || now <= hasta);
-            const inscrito = eventosInscritos.some(x => x.id === ev.id);
-            return req && abierta && !inscrito && ['PLANIFICADO','EN_CURSO'].includes(ev.estado);
+            const inscrito = eventosInscritos.some(x => x.id === ev?.id);
+            return req && abierta && !inscrito && ['PLANIFICADO','EN_CURSO'].includes(ev?.estado);
           });
 
-        const totalMin = horas?.ok ? (horas as any)?.data?.resumen?.acumulado_min ?? 0 : 0;
+        const totalMin = (horas as any)?.ok ? (horas as any)?.data?.resumen?.acumulado_min ?? 0 : 0;
 
         const contadores = {
           proyectos_inscritos: (proy?.data?.vinculados_historicos ?? [])
@@ -138,7 +148,6 @@ export class DashboardFacade {
                       hora_inicio: s.hora_inicio,
                       hora_fin: s.hora_fin,
                       estado: s.estado ?? 'PLANIFICADO',
-
                       fuente: 'PROYECTO',
                       ownerId: proyDet.id,
                       titulo: `${pr.nombre} · ${proyDet.titulo}`
