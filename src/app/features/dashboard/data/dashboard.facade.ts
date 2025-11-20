@@ -1,18 +1,13 @@
-// dashboard.facade.ts
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, forkJoin, map, of, switchMap, catchError } from 'rxjs';
+import { BehaviorSubject, forkJoin, of } from 'rxjs';
+import { map, switchMap, catchError, finalize } from 'rxjs/operators';
 import { ProyectosAlumnoApi } from './proyectos-alumno.api';
 import { EventosApi } from './eventos.api';
 import { HorasApiService } from '../../hours/data-access/h.api';
-import { DashboardVM, EventoLite, ProyectoLite, SesionLite } from '../models/dashboard.models';
+import { DashboardVM, ProyectoLite, EventoLite, SesionLite } from '../models/dashboard.models';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardFacade {
-
-  // 👉 FLAG: apágalo en ambientes donde el API de eventos no está (o no tienes permisos)
-  // Cuando el backend de eventos esté OK, cámbialo a true (o muévelo a environment.*)
-  private readonly EVENTOS_ENABLED = false;
-
   private _state = new BehaviorSubject<DashboardVM>({
     loading: true,
     error: null,
@@ -32,8 +27,11 @@ export class DashboardFacade {
     eventosInscribibles: [],
     proximasSesiones: []
   });
-
   readonly vm$ = this._state.asObservable();
+
+  private loadingInFlight = false;
+  private lastLoadedAt = 0;
+  private eventsAvailable = true;
 
   constructor(
     private proyectosApi: ProyectosAlumnoApi,
@@ -41,49 +39,57 @@ export class DashboardFacade {
     private horasApi: HorasApiService
   ) {}
 
-  load() {
+  load(force = false) {
+    if (this.loadingInFlight) return;
+    const now = Date.now();
+    if (!force && now - this.lastLoadedAt < 1000) return; // debouncing
+
+    this.loadingInFlight = true;
     this._state.next({ ...this._state.value, loading: true, error: null });
 
     const proyectos$ = this.proyectosApi.getResumenAlumno()
-      .pipe(catchError(e => of({ ok:false, error: e?.error?.message })));
+      .pipe(catchError(e => of({ ok: false, error: e?.error?.message })));
 
-    // ⛔ NO LLAMAR al API de eventos si el flag está apagado (evita 404/403 y el spam en consola)
-    const eventosActivos$ = this.EVENTOS_ENABLED
-      ? this.eventosApi.getMisEventos('ACTIVOS').pipe(
-          catchError(e => of({ ok:false, error: e?.error?.message }))
-        )
-      : of({ ok: true, data: { eventos: [] } });
+    const evMis$   = this.eventsAvailable
+      ? this.eventosApi.getMisEventos('ACTIVOS')
+      : of({ ok: true, data: { eventos: [] } } as any);
 
-    const eventosFuente$ = this.EVENTOS_ENABLED
-      ? this.eventosApi.getEventosVigentesMiEpSede().pipe(
-          catchError(e => of({ ok:false, error: e?.error?.message }))
-        )
-      : of({ ok: true, data: [] });
+    const evSrc$   = this.eventsAvailable
+      ? this.eventosApi.getEventosVigentesMiEpSede()
+      : of({ ok: true, data: [] } as any);
 
-    const horas$ = this.horasApi.obtenerMiReporteHoras()
-      .pipe(catchError(e => of({ ok:false, message: e?.message })));
+    const horas$   = this.horasApi.obtenerMiReporteHoras()
+      .pipe(catchError(e => of({ ok: false, message: e?.message })));
 
-    forkJoin([proyectos$, eventosActivos$, eventosFuente$, horas$]).pipe(
-      switchMap(([proy, evMis, evSrc, horas]) => {
-        const now = new Date();
+    forkJoin([proyectos$, evMis$, evSrc$, horas$]).pipe(
+      switchMap(([proy, evMisRaw, evSrcRaw, horas]) => {
+        const ahora = new Date();
 
+        // Si alguna llamada de eventos fue 404/403 → apagamos el módulo de eventos
+        const markUnavailable = (r: any) =>
+          r?.__error && (r.status === 404 || r.status === 403) && (this.eventsAvailable = false);
+        markUnavailable(evMisRaw);
+        markUnavailable(evSrcRaw);
+
+        // ---- proyectos ----
         const proyectoActual: ProyectoLite | null =
-          proy?.data?.actual ? { ...proy.data.actual } : null;
+          (proy as any)?.data?.actual ? { ...(proy as any).data.actual } : null;
 
-        const proyectosPend = (proy?.data?.pendientes ?? []).map((p: any) => ({
-          proyecto: p.proyecto,
-          requerido_min: p.requerido_min,
-          acumulado_min: p.acumulado_min,
-          faltan_min: p.faltan_min,
-          cerrado: !!p.cerrado
-        }));
+        const proyectosPendientes: ProyectoLite[] =
+          ((proy as any)?.data?.pendientes ?? []).map((p: any) => ({
+            proyecto: p.proyecto,
+            requerido_min: p.requerido_min,
+            acumulado_min: p.acumulado_min,
+            faltan_min: p.faltan_min,
+            cerrado: !!p.cerrado
+          }));
 
-        const proyectosInscribibles: ProyectoLite[] = proy?.data?.inscribibles ?? [];
-        const proyectosLibres: ProyectoLite[] = proy?.data?.libres ?? [];
+        const proyectosInscribibles: ProyectoLite[] = (proy as any)?.data?.inscribibles ?? [];
+        const proyectosLibres: ProyectoLite[]       = (proy as any)?.data?.libres ?? [];
 
         const proyectoActual$ = proyectoActual?.id
           ? this.proyectosApi.getDetalleProyecto(proyectoActual.id).pipe(
-              map(det => det?.data?.proyecto ? ({
+              map((det: any) => det?.data?.proyecto ? ({
                 ...det.data.proyecto,
                 procesos: det.data.procesos ?? []
               }) : proyectoActual),
@@ -91,40 +97,62 @@ export class DashboardFacade {
             )
           : of(null);
 
-        // Si el flag está apagado, esto viene vacío y el dashboard oculta los bloques de eventos
-        const eventosInscritos: EventoLite[] = (evMis as any)?.data?.eventos
-          ? (evMis as any).data.eventos.map((e: any) => ({
-              id: e.id,
-              codigo: e.codigo,
-              titulo: e.titulo,
-              subtitulo: e.subtitulo,
-              modalidad: e.modalidad,
-              estado: e.estado,
-              requiere_inscripcion: !!e.requiere_inscripcion,
-              cupo_maximo: e.cupo_maximo ?? null,
-              url_imagen_portada: e.url_imagen_portada ?? null,
-              inscripcion_desde: e.inscripcion_desde ?? null,
-              inscripcion_hasta: e.inscripcion_hasta ?? null,
-              participacion: e.participacion ?? null,
-            }))
-          : [];
+        // ---- eventos inscritos ----
+        let eventosInscritos: EventoLite[] = [];
+        if (!evMisRaw?.__error) {
+          const evMis = (evMisRaw as any);
+          eventosInscritos = (evMis?.data?.eventos ?? []).map((e: any) => ({
+            id: e.id,
+            codigo: e.codigo,
+            titulo: e.titulo,
+            subtitulo: e.subtitulo,
+            modalidad: e.modalidad,
+            estado: e.estado,
+            requiere_inscripcion: !!e.requiere_inscripcion,
+            cupo_maximo: e.cupo_maximo ?? null,
+            url_imagen_portada: e.url_imagen_portada ?? null,
+            inscripcion_desde: e.inscripcion_desde ?? null,
+            inscripcion_hasta: e.inscripcion_hasta ?? null,
+            participacion: e.participacion ?? null
+          }));
+        }
 
-        const fuenteEventos = (evSrc as any)?.data?.data?.data ?? (evSrc as any)?.data?.data ?? (evSrc as any)?.data ?? [];
-        const eventosInscribibles = fuenteEventos
-          .map((raw: any) => raw?.evento || raw)
-          .filter((ev: any) => {
-            const req = !!ev?.requiere_inscripcion;
-            const desde = ev?.inscripcion_desde ? new Date(ev.inscripcion_desde) : null;
-            const hasta = ev?.inscripcion_hasta ? new Date(ev.inscripcion_hasta) : null;
-            const abierta = (!desde || now >= desde) && (!hasta || now <= hasta);
-            const inscrito = eventosInscritos.some(x => x.id === ev?.id);
-            return req && abierta && !inscrito && ['PLANIFICADO','EN_CURSO'].includes(ev?.estado);
-          });
+        // ---- eventos inscribibles ----
+        let eventosInscribibles: EventoLite[] = [];
+        if (!evSrcRaw?.__error) {
+          const evSrc = (evSrcRaw as any);
+          const fuente = (evSrc?.data?.data?.data ?? evSrc?.data?.data ?? evSrc?.data) || [];
+          const yaInscrito = (id: number) => eventosInscritos.some(x => x.id === id);
 
+          eventosInscribibles = fuente
+            .map((raw: any) => raw?.evento || raw)
+            .filter((ev: any) => {
+              const req = !!ev.requiere_inscripcion;
+              const desde = ev.inscripcion_desde ? new Date(ev.inscripcion_desde) : null;
+              const hasta = ev.inscripcion_hasta ? new Date(ev.inscripcion_hasta) : null;
+              const abierta = (!desde || ahora >= desde) && (!hasta || ahora <= hasta);
+              return req && abierta && !yaInscrito(ev.id) && ['PLANIFICADO','EN_CURSO'].includes(ev.estado);
+            })
+            .map((ev: any) => ({
+              id: ev.id,
+              codigo: ev.codigo,
+              titulo: ev.titulo,
+              subtitulo: ev.subtitulo,
+              modalidad: ev.modalidad,
+              estado: ev.estado,
+              requiere_inscripcion: !!ev.requiere_inscripcion,
+              cupo_maximo: ev.cupo_maximo ?? null,
+              url_imagen_portada: ev.url_imagen_portada ?? null,
+              inscripcion_desde: ev.inscripcion_desde ?? null,
+              inscripcion_hasta: ev.inscripcion_hasta ?? null,
+              participacion: null
+            }));
+        }
+
+        // ---- horas / contadores ----
         const totalMin = (horas as any)?.ok ? (horas as any)?.data?.resumen?.acumulado_min ?? 0 : 0;
-
         const contadores = {
-          proyectos_inscritos: (proy?.data?.vinculados_historicos ?? [])
+          proyectos_inscritos: ((proy as any)?.data?.vinculados_historicos ?? [])
             .filter((p: any) => ['INSCRITO','CONFIRMADO','EN_CURSO','FINALIZADO'].includes(p?.participacion?.estado))
             .length || 0,
           faltas_proyectos: 0,
@@ -133,15 +161,17 @@ export class DashboardFacade {
           horas_requeridas_min: null
         };
 
+        // ---- próximas sesiones (desde proyecto actual) ----
         return proyectoActual$.pipe(
-          map(proyDet => {
+          map((proyDet: any) => {
             const proximasSesiones: SesionLite[] = [];
+            const now2 = new Date();
 
             if (proyDet?.procesos?.length) {
               proyDet.procesos.forEach((pr: any) => {
                 (pr.sesiones || []).forEach((s: any) => {
                   const sDate = new Date(`${s.fecha}T${s.hora_inicio}`);
-                  if (sDate >= now) {
+                  if (sDate >= now2) {
                     proximasSesiones.push({
                       id: s.id,
                       fecha: s.fecha,
@@ -164,10 +194,10 @@ export class DashboardFacade {
             return {
               loading: false,
               error: null,
-              contexto: proy?.data?.contexto ?? null,
+              contexto: (proy as any)?.data?.contexto ?? null,
               contadores,
               proyectoActual: proyDet,
-              proyectosPendientes: proyectosPend,
+              proyectosPendientes,
               proyectosInscribibles,
               proyectosLibres,
               eventosInscritos,
@@ -176,15 +206,15 @@ export class DashboardFacade {
             } as DashboardVM;
           })
         );
+      }),
+      finalize(() => {
+        this.loadingInFlight = false;
+        this.lastLoadedAt = Date.now();
       })
     ).subscribe({
       next: (vm) => this._state.next(vm),
       error: (e) =>
-        this._state.next({
-          ...this._state.value,
-          loading: false,
-          error: e?.message || 'Error general'
-        })
+        this._state.next({ ...this._state.value, loading: false, error: e?.message || 'Error general' })
     });
   }
 }
