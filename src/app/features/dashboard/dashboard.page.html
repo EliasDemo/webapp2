@@ -1,0 +1,188 @@
+<div class="dash" *ngIf="vm$ | async as vm">
+  <!-- Loading / Error -->
+  <div class="banner" *ngIf="vm.loading">Cargando…</div>
+  <div class="banner error" *ngIf="vm.error">{{ vm.error }}</div>
+
+  <!-- Encabezado -->
+  <section class="header">
+    <div>
+      <h1>Mi Dashboard</h1>
+      <p class="muted" *ngIf="vm.contexto">
+        Período: <b>{{ vm.contexto.periodo_codigo || vm.contexto.periodo_id }}</b>
+        · Ciclo actual: <b>{{ vm.contexto.ciclo_actual }}</b>
+      </p>
+    </div>
+    <div class="stats">
+      <div class="tile">
+        <div class="label">Proyectos inscritos</div>
+        <div class="value">{{ vm.contadores.proyectos_inscritos }}</div>
+      </div>
+      <div class="tile">
+        <div class="label">Horas acumuladas</div>
+        <div class="value">{{ fmtMin(vm.contadores.horas_acumuladas_min) }}</div>
+      </div>
+      <div class="tile">
+        <div class="label">Faltas (proyectos)</div>
+        <div class="value">{{ vm.contadores.faltas_proyectos }}</div>
+      </div>
+      <div class="tile">
+        <div class="label">Faltas (eventos)</div>
+        <div class="value">{{ vm.contadores.faltas_eventos }}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Proyecto actual (árbol completo) -->
+  <section class="card" *ngIf="vm.proyectoActual as p">
+    <div class="card-header">
+      <div>
+        <h2>{{ p.titulo }}</h2>
+        <p class="muted">
+          {{ p.tipo }} · {{ p.modalidad }} · Estado: <b>{{ p.estado }}</b>
+        </p>
+      </div>
+      <div class="actions">
+        <button *ngIf="p.inscribible?.puede" (click)="inscribirProyecto(p)">Inscribirme</button>
+      </div>
+    </div>
+
+    <div class="images" *ngIf="p.imagenes?.length">
+      <img *ngFor="let img of p.imagenes" [src]="img.url" [alt]="img.titulo || p.titulo" />
+    </div>
+
+    <div class="progress-block" *ngIf="p.progreso as prog">
+      <div class="progress-row">
+        <div class="progress-label">Horas</div>
+        <div class="bar">
+          <div class="fill" [style.width.%]="pct(prog.porcentaje)"></div>
+        </div>
+        <div class="progress-val">{{ fmtMin(prog.acumulado_min) }} / {{ fmtMin(prog.requerido_min) }}</div>
+      </div>
+    </div>
+
+    <div class="tree" *ngIf="p.procesos?.length">
+      <h3>Procesos y sesiones</h3>
+      <div class="proceso" *ngFor="let pr of p.procesos">
+        <div class="proceso-header">
+          <div>
+            <b>{{ pr.nombre }}</b>
+            <span class="chip">{{ pr.tipo_registro }}</span>
+            <span class="muted" *ngIf="pr.horas_asignadas"> · {{ pr.horas_asignadas }} h</span>
+          </div>
+        </div>
+        <table class="tabla-sesiones" *ngIf="pr.sesiones?.length">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Inicio</th>
+              <th>Fin</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of pr.sesiones">
+              <td>{{ s.fecha }}</td>
+              <td>{{ s.hora_inicio }}</td>
+              <td>{{ s.hora_fin }}</td>
+              <td>{{ s.estado }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Proyectos pendientes (resumen) -->
+  <section class="card" *ngIf="vm.proyectosPendientes?.length">
+    <h2>Proyectos pendientes</h2>
+    <div class="grid-list">
+      <div class="item" *ngFor="let it of vm.proyectosPendientes">
+        <h3>{{ it.proyecto.titulo }}</h3>
+        <p class="muted">{{ it.proyecto.tipo }} · {{ it.proyecto.modalidad }}</p>
+        <div class="progress-row tight">
+          <div class="bar">
+            <div class="fill" [style.width.%]="pct((it.acumulado_min * 100) / it.requerido_min)"></div>
+          </div>
+          <div class="progress-val">
+            {{ fmtMin(it.acumulado_min) }} / {{ fmtMin(it.requerido_min) }}
+          </div>
+        </div>
+        <button *ngIf="it.proyecto.inscribible?.puede" (click)="inscribirProyecto(it.proyecto)">Inscribirme</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Eventos inscritos -->
+  <section class="card" *ngIf="vm.eventosInscritos?.length">
+    <h2>Mis eventos</h2>
+    <div class="grid-list">
+      <div class="item" *ngFor="let e of vm.eventosInscritos">
+        <div class="thumb" *ngIf="e.url_imagen_portada">
+          <img [src]="e.url_imagen_portada" [alt]="e.titulo" />
+        </div>
+        <div class="body">
+          <h3>{{ e.titulo }}</h3>
+          <p class="muted">{{ e.modalidad }} · Estado: {{ e.estado }}</p>
+          <p class="muted" *ngIf="e.participacion">Participación: {{ e.participacion.estado }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Inscribibles -->
+  <section class="two-col">
+    <div class="card" *ngIf="vm.proyectosInscribibles?.length">
+      <h2>Proyectos inscribibles</h2>
+      <div class="grid-list">
+        <div class="item" *ngFor="let p2 of vm.proyectosInscribibles">
+          <h3>{{ p2.titulo }}</h3>
+          <p class="muted">{{ p2.tipo }} · {{ p2.modalidad }} · Estado: {{ p2.estado }}</p>
+          <button (click)="inscribirProyecto(p2)">Inscribirme</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" *ngIf="vm.eventosInscribibles?.length">
+      <h2>Eventos inscribibles</h2>
+      <div class="grid-list">
+        <div class="item" *ngFor="let e2 of vm.eventosInscribibles">
+          <h3>{{ e2.titulo }}</h3>
+          <p class="muted">
+            {{ e2.modalidad }}
+            <ng-container *ngIf="e2.inscripcion_desde || e2.inscripcion_hasta">
+              · Inscripción:
+              <span *ngIf="e2.inscripcion_desde">desde {{ e2.inscripcion_desde }}</span>
+              <span *ngIf="e2.inscripcion_hasta">hasta {{ e2.inscripcion_hasta }}</span>
+            </ng-container>
+          </p>
+          <button (click)="inscribirEvento(e2)">Inscribirme</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Próximas sesiones -->
+  <section class="card" *ngIf="vm.proximasSesiones?.length">
+    <h2>Próximas sesiones</h2>
+    <table class="tabla-sesiones">
+      <thead>
+        <tr>
+          <th>Fuente</th>
+          <th>Título</th>
+          <th>Fecha</th>
+          <th>Inicio</th>
+          <th>Fin</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let s of vm.proximasSesiones">
+          <td>{{ s.fuente }}</td>
+          <td>{{ s.titulo }}</td>
+          <td>{{ s.fecha }}</td>
+          <td>{{ s.hora_inicio }}</td>
+          <td>{{ s.hora_fin }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
