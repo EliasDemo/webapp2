@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+
 import { DashboardFacade } from './data/dashboard.facade';
 import { InscripcionesApi } from './data/inscripciones.api';
-import { Observable } from 'rxjs';
 import { DashboardVM, ProyectoLite, EventoLite } from './models/dashboard.models';
 
 @Component({
@@ -9,16 +10,38 @@ import { DashboardVM, ProyectoLite, EventoLite } from './models/dashboard.models
   templateUrl: './dashboard.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DashboardPage implements OnInit {
-  vm$!: Observable<DashboardVM>;
+export class DashboardPage implements OnInit, OnDestroy {
+  /**
+   * Importante: evitamos async pipe para no tocar DestroyRef.
+   * Mantenemos una sola suscripción manual y marcamos OnPush.
+   */
+  vm: DashboardVM | null = null;
 
-  constructor(private facade: DashboardFacade, private insc: InscripcionesApi) {}
+  private sub?: Subscription;
+
+  constructor(
+    private facade: DashboardFacade,
+    private insc: InscripcionesApi,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    this.vm$ = this.facade.vm$;
+    // Suscripción manual al estado (BehaviorSubject emite de inmediato el snapshot inicial)
+    this.sub = this.facade.vm$.subscribe((next) => {
+      this.vm = next;
+      // Forzamos render con estrategia OnPush
+      this.cdr.markForCheck();
+    });
+
+    // Disparar la carga inicial
     this.facade.load();
   }
 
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
+
+  // ==== Acciones ====
   inscribirProyecto(p: ProyectoLite) {
     if (!p?.id) return;
     this.insc.inscribirProyecto(p.id).subscribe({
@@ -35,6 +58,7 @@ export class DashboardPage implements OnInit {
     });
   }
 
+  // ==== Helpers de UI ====
   pct(v?: number | null) {
     return Math.max(0, Math.min(100, v ?? 0));
   }
@@ -42,7 +66,7 @@ export class DashboardPage implements OnInit {
   fmtMin(min: number | null | undefined) {
     const m = Math.max(0, +(min ?? 0));
     const h = Math.floor(m / 60);
-    const r = m % 60;
+    const r = Math.floor(m % 60);
     return `${h}h ${r}m`;
   }
 }

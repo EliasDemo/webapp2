@@ -1,6 +1,6 @@
-<div class="dash" *ngIf="vm$ | async as vm">
+<div class="dash" *ngIf="vm as vm; else loadingTpl">
   <!-- Loading / Error -->
-  <div class="banner" *ngIf="vm.loading">Cargando…</div>
+  <div class="banner" *ngIf="vm.loading && !vm.error">Cargando…</div>
   <div class="banner error" *ngIf="vm.error">{{ vm.error }}</div>
 
   <!-- Encabezado -->
@@ -42,7 +42,7 @@
         </p>
       </div>
       <div class="actions">
-        <button *ngIf="p.inscribible?.puede" (click)="inscribirProyecto(p)">Inscribirme</button>
+        <button *ngIf="p?.inscribible?.puede" (click)="inscribirProyecto(p)">Inscribirme</button>
       </div>
     </div>
 
@@ -97,17 +97,17 @@
     <h2>Proyectos pendientes</h2>
     <div class="grid-list">
       <div class="item" *ngFor="let it of vm.proyectosPendientes">
-        <h3>{{ it.proyecto.titulo }}</h3>
-        <p class="muted">{{ it.proyecto.tipo }} · {{ it.proyecto.modalidad }}</p>
+        <h3>{{ it.proyecto?.titulo }}</h3>
+        <p class="muted">{{ it.proyecto?.tipo }} · {{ it.proyecto?.modalidad }}</p>
         <div class="progress-row tight">
           <div class="bar">
-            <div class="fill" [style.width.%]="pct((it.acumulado_min * 100) / it.requerido_min)"></div>
+            <div class="fill" [style.width.%]="pct((it.acumulado_min * 100) / (it.requerido_min || 1))"></div>
           </div>
           <div class="progress-val">
             {{ fmtMin(it.acumulado_min) }} / {{ fmtMin(it.requerido_min) }}
           </div>
         </div>
-        <button *ngIf="it.proyecto.inscribible?.puede" (click)="inscribirProyecto(it.proyecto)">Inscribirme</button>
+        <button *ngIf="it.proyecto?.inscribible?.puede" (click)="inscribirProyecto(it.proyecto)">Inscribirme</button>
       </div>
     </div>
   </section>
@@ -186,3 +186,8 @@
     </table>
   </section>
 </div>
+
+<!-- Loader simple sin CSS adicional -->
+<ng-template #loadingTpl>
+  <div class="banner">Cargando…</div>
+</ng-template>
