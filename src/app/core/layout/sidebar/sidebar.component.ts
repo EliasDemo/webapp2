@@ -281,6 +281,20 @@ export class SidebarComponent {
       roles: 'ENCARGADO',
     },
 
+      {
+    route: '/ai/resumen',
+    label: 'Inspector · Resumen',
+    icon: 'fas fa-user-graduate text-base',
+    activeClass: 'bg-indigo-50/80 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300',
+    indicatorClass: 'bg-gradient-to-b from-indigo-500 to-violet-500',
+    iconActiveClass: 'bg-indigo-500/20 shadow-md',
+    iconActiveColor: 'text-indigo-600 dark:text-indigo-400',
+    textActiveColor: 'text-indigo-700 dark:text-indigo-300',
+    exact: false,
+    roles: 'ENCARGADO',
+  },
+
+
 
 
 

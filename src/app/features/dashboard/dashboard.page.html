@@ -1,10 +1,10 @@
-<!-- Loader -->
+<!-- Loader global -->
 <div *ngIf="loading" class="flex justify-center items-center py-12">
   <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
   <span class="ml-2 text-gray-600">Cargando...</span>
 </div>
 
-<!-- Error -->
+<!-- Error global -->
 <div *ngIf="!loading && error" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
   {{ error }}
 </div>
@@ -18,7 +18,7 @@
 
     <div class="flex flex-col sm:flex-row sm:items-center gap-2 text-gray-600">
       <p class="mb-0">
-        Periodo:
+        Período:
         <strong class="font-semibold">{{ d.contexto.periodo.codigo }}</strong>
 
         <span *ngIf="d.contexto.periodo.vigente" class="ml-2 px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
@@ -70,373 +70,385 @@
     </div>
   </section>
 
-  <!-- Listas de eventos / proyectos (inscritos / inscribibles) -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- ╔═══════════════════════ EVENTOS ═══════════════════════╗ -->
+  <section class="mt-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+      <h3 class="text-xl font-semibold text-gray-800">Eventos</h3>
 
-    <!-- Eventos -->
-    <div class="space-y-6">
-
-      <!-- Eventos inscritos -->
-      <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Eventos inscritos</h3>
-
-        <div *ngIf="eventosInscritos.length; else noEventosInscritos" class="space-y-3">
-          <div *ngFor="let ev of eventosInscritos"
-               class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer">
-            <div class="flex justify-between items-start">
-              <h4 class="font-medium text-gray-800">{{ ev.titulo }}</h4>
-              <span class="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-md">{{ ev.codigo }}</span>
-            </div>
-
-            <p class="mt-2 text-gray-600 text-sm" *ngIf="ev.descripcion_corta">
-              {{ ev.descripcion_corta }}
-            </p>
-
-            <div class="mt-2 text-xs text-gray-500">
-              <span>{{ ev.sesiones?.[0]?.fecha }}</span>
-              <span class="mx-1">•</span>
-              <span>{{ ev.modalidad || 'Presencial' }}</span>
-              <span *ngIf="ev.progreso" class="ml-2">
-                • Progreso: {{ ev.progreso.porcentaje }}%
-                ({{ ev.progreso.asistidas }}/{{ ev.progreso.totales }} sesiones)
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <ng-template #noEventosInscritos>
-          <p class="text-gray-500 text-sm">
-            Aún no estás inscrito en ningún evento.
-          </p>
-        </ng-template>
-      </section>
-
-      <!-- Eventos inscribibles -->
-      <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Eventos disponibles para inscribirte</h3>
-
-        <div *ngIf="eventosInscribibles.length; else noEventosDisponibles" class="space-y-3">
-          <div *ngFor="let ev of eventosInscribibles"
-               class="border border-gray-200 rounded-lg p-4">
-            <div class="flex justify-between items-start">
-              <h4 class="font-medium text-gray-800">{{ ev.titulo }}</h4>
-              <span class="px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded-md">
-                {{ ev.modalidad || 'Presencial' }}
-              </span>
-            </div>
-
-            <p class="mt-2 text-gray-600 text-sm" *ngIf="ev.descripcion_corta">
-              {{ ev.descripcion_corta }}
-            </p>
-
-            <div class="mt-2 text-xs text-gray-500">
-              Inscripción:
-              <span *ngIf="ev.inscripcion_desde">
-                desde {{ ev.inscripcion_desde }}
-              </span>
-              <span *ngIf="ev.inscripcion_hasta">
-                <span class="mx-1">•</span>
-                hasta {{ ev.inscripcion_hasta }}
-              </span>
-            </div>
-
-            <button
-              class="mt-3 inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium
-                     bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-              (click)="inscribirEvento(ev)"
-              [disabled]="inscribiendoId?.tipo === 'evento' && inscribiendoId?.id === ev.id">
-              Inscribirme
-            </button>
-          </div>
-        </div>
-
-        <ng-template #noEventosDisponibles>
-          <p class="text-gray-500 text-sm">
-            No hay eventos disponibles para inscribirte en este periodo.
-          </p>
-        </ng-template>
-      </section>
+      <div class="inline-flex rounded-full bg-gray-100 p-1 text-xs sm:text-sm">
+        <button
+          type="button"
+          class="px-3 py-1 rounded-full"
+          [ngClass]="eventoTab === 'inscritos'
+            ? 'bg-white shadow-sm text-gray-900'
+            : 'text-gray-500 hover:text-gray-800'"
+          (click)="eventoTab = 'inscritos'">
+          Mis eventos
+        </button>
+        <button
+          type="button"
+          class="px-3 py-1 rounded-full"
+          [ngClass]="eventoTab === 'inscribibles'
+            ? 'bg-white shadow-sm text-gray-900'
+            : 'text-gray-500 hover:text-gray-800'"
+          (click)="eventoTab = 'inscribibles'">
+          Para inscribirme
+        </button>
+      </div>
     </div>
 
-    <!-- Proyectos -->
-    <div class="space-y-6">
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <!-- Lista lateral de eventos (tipo portada) -->
+      <div class="xl:col-span-1 space-y-3 max-h-[520px] overflow-y-auto pr-1">
+        <ng-container *ngIf="eventosLista.length; else noEventosLista">
+          <article
+            *ngFor="let ev of eventosLista"
+            (click)="verDetalleEvento(ev)"
+            class="border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+            [ngClass]="{'border-blue-400 bg-blue-50/60': selectedEventoBase?.id === ev.id}">
+            <div class="flex items-start gap-3">
+              <div class="flex-1">
+                <h4 class="text-sm font-semibold text-gray-800 line-clamp-2">
+                  {{ ev.titulo }}
+                </h4>
+                <p class="mt-1 text-xs text-gray-500 line-clamp-2" *ngIf="ev.descripcion_corta">
+                  {{ ev.descripcion_corta }}
+                </p>
+                <div class="mt-1 text-[11px] text-gray-500 flex flex-wrap gap-1">
+                  <span *ngIf="ev.sesiones?.length">
+                    {{ ev.sesiones[0].fecha }}
+                  </span>
+                  <span *ngIf="ev.modalidad">• {{ ev.modalidad }}</span>
+                  <span *ngIf="ev.requiere_inscripcion">• Requiere inscripción</span>
+                </div>
+              </div>
 
-      <!-- Proyectos inscritos -->
-      <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Proyectos inscritos</h3>
-
-        <div *ngIf="proyectosInscritos.length; else noProyectosInscritos" class="space-y-3">
-          <div *ngFor="let p of proyectosInscritos"
-               class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer">
-            <div class="flex justify-between items-start">
-              <h4 class="font-medium text-gray-800">{{ p.titulo }}</h4>
-              <span class="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-md">{{ p.codigo }}</span>
+              <div class="w-16 h-16 rounded-md overflow-hidden bg-gray-100 flex-shrink-0" *ngIf="ev.url_imagen_portada">
+                <img [src]="ev.url_imagen_portada" class="w-full h-full object-cover" />
+              </div>
             </div>
+          </article>
+        </ng-container>
 
-            <p class="mt-2 text-gray-600 text-sm" *ngIf="p.descripcion">
-              {{ p.descripcion }}
-            </p>
-
-            <div class="mt-2 text-xs text-gray-500">
-              <span>Tipo: {{ p.tipo }}</span>
-              <span class="mx-1">•</span>
-              <span>Modalidad: {{ p.modalidad || 'Presencial' }}</span>
-              <span class="mx-1">•</span>
-              <span>Progreso: {{ p.progreso?.porcentaje ?? 0 }}%</span>
-            </div>
-          </div>
-        </div>
-
-        <ng-template #noProyectosInscritos>
-          <p class="text-gray-500 text-sm">
-            Aún no estás inscrito en ningún proyecto.
+        <ng-template #noEventosLista>
+          <p class="text-sm text-gray-500">
+            No hay eventos en esta categoría.
           </p>
         </ng-template>
-      </section>
+      </div>
 
-      <!-- Proyectos inscribibles -->
-      <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Proyectos disponibles</h3>
-
-        <div *ngIf="proyectosInscribibles.length; else noProyectosDisponibles" class="space-y-3">
-          <div *ngFor="let p of proyectosInscribibles"
-               class="border border-gray-200 rounded-lg p-4">
-            <div class="flex justify-between items-start">
-              <h4 class="font-medium text-gray-800">{{ p.titulo }}</h4>
-              <span class="px-2 py-1 text-xs bg-indigo-50 text-indigo-600 rounded-md">
-                Nivel:
-                <ng-container *ngIf="p.ciclos?.length; else sinNivel">
-                  {{ p.ciclos.join(', ') }}
-                </ng-container>
-                <ng-template #sinNivel>N/D</ng-template>
-              </span>
-            </div>
-
-            <p class="mt-2 text-gray-600 text-sm" *ngIf="p.descripcion">
-              {{ p.descripcion }}
-            </p>
-
-            <div class="mt-2 text-xs text-gray-500">
-              <span>Tipo: {{ p.tipo }}</span>
-              <span class="mx-1">•</span>
-              <span>Modalidad: {{ p.modalidad || 'Presencial' }}</span>
-            </div>
-
-            <button
-              class="mt-3 inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium
-                     bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
-              (click)="inscribirProyecto(p)"
-              [disabled]="inscribiendoId?.tipo === 'proyecto' && inscribiendoId?.id === p.id">
-              Inscribirme
-            </button>
-          </div>
+      <!-- Artículo principal del evento -->
+      <div class="xl:col-span-2">
+        <div *ngIf="loadingEventoFull" class="flex items-center text-gray-500 text-sm">
+          <span class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400 mr-2"></span>
+          Cargando detalle del evento...
         </div>
 
-        <ng-template #noProyectosDisponibles>
-          <p class="text-gray-500 text-sm">
-            No hay proyectos disponibles para inscribirte en este periodo.
-          </p>
-        </ng-template>
-      </section>
-    </div>
-  </div>
-
-  <!-- Muro / Blog de eventos y proyectos (FULL) -->
-  <section class="mt-10">
-    <h3 class="text-xl font-semibold text-gray-800 mb-4">
-      Novedades de eventos y proyectos
-    </h3>
-
-    <div *ngIf="loadingFull" class="flex items-center text-gray-500 text-sm mb-4">
-      <span class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400 mr-2"></span>
-      Cargando novedades...
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Eventos (blog) -->
-      <div class="space-y-4">
-        <h4 class="text-lg font-semibold text-gray-700">Eventos</h4>
-
-        <div *ngIf="eventosFull.length; else noEventosBlog" class="space-y-4">
-          <article *ngFor="let ev of eventosFull"
+        <ng-container *ngIf="!loadingEventoFull">
+          <article *ngIf="selectedEventoFull as evFull; else placeholderEvento"
                    class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="p-4 md:p-5">
-              <div class="flex items-start justify-between gap-3">
+            <!-- Imagen principal / carrusel -->
+            <div *ngIf="evFull.imagenes?.length || evFull.url_imagen_portada" class="relative">
+              <ng-container *ngIf="evFull.imagenes?.length; else portadaSimpleEvento">
+                <img
+                  class="w-full h-64 object-cover"
+                  [src]="evFull.imagenes[eventoSlideIndex].url"
+                  [alt]="evFull.imagenes[eventoSlideIndex].titulo || evFull.titulo"
+                />
+                <button
+                  *ngIf="evFull.imagenes.length > 1"
+                  class="absolute inset-y-0 left-0 px-2 flex items-center text-white text-sm bg-black/30 hover:bg-black/50"
+                  (click)="prevEventoImage()">
+                  ‹
+                </button>
+                <button
+                  *ngIf="evFull.imagenes.length > 1"
+                  class="absolute inset-y-0 right-0 px-2 flex items-center text-white text-sm bg-black/30 hover:bg-black/50"
+                  (click)="nextEventoImage()">
+                  ›
+                </button>
+                <div class="absolute bottom-2 right-2 text-[10px] px-2 py-0.5 rounded-full bg-black/60 text-white">
+                  {{ eventoSlideIndex + 1 }} / {{ evFull.imagenes.length }}
+                </div>
+              </ng-container>
+
+              <ng-template #portadaSimpleEvento>
+                <img
+                  class="w-full h-64 object-cover"
+                  [src]="evFull.url_imagen_portada!"
+                  [alt]="evFull.titulo"
+                />
+              </ng-template>
+            </div>
+
+            <div class="p-4 md:p-6">
+              <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h5 class="text-base md:text-lg font-semibold text-gray-900">
-                    {{ ev.titulo }}
-                  </h5>
-                  <p *ngIf="ev.subtitulo" class="text-xs md:text-sm text-gray-500 mt-0.5">
-                    {{ ev.subtitulo }}
+                  <h4 class="text-xl font-semibold text-gray-900">
+                    {{ evFull.titulo }}
+                  </h4>
+                  <p *ngIf="evFull.subtitulo" class="text-sm text-gray-600 mt-1">
+                    {{ evFull.subtitulo }}
                   </p>
                 </div>
-                <span class="px-2 py-1 text-[10px] md:text-xs rounded-full"
+                <span class="px-2 py-1 text-xs rounded-full"
                       [ngClass]="{
-                        'bg-green-50 text-green-700': ev.estado === 'EN_CURSO',
-                        'bg-yellow-50 text-yellow-700': ev.estado === 'PLANIFICADO',
-                        'bg-gray-100 text-gray-600': ev.estado !== 'EN_CURSO' && ev.estado !== 'PLANIFICADO'
+                        'bg-green-50 text-green-700': evFull.estado === 'EN_CURSO',
+                        'bg-yellow-50 text-yellow-700': evFull.estado === 'PLANIFICADO',
+                        'bg-gray-100 text-gray-600': evFull.estado !== 'EN_CURSO' && evFull.estado !== 'PLANIFICADO'
                       }">
-                  {{ ev.estado }}
+                  {{ evFull.estado }}
                 </span>
               </div>
 
               <div class="mt-2 text-xs text-gray-500 flex flex-wrap gap-2">
-                <span *ngIf="ev.modalidad">
-                  Modalidad: <strong>{{ ev.modalidad }}</strong>
-                </span>
-                <span *ngIf="ev.periodo?.codigo">
-                  • Período: <strong>{{ ev.periodo?.codigo }}</strong>
-                </span>
-                <span *ngIf="ev.categoria?.nombre">
-                  • Categoría: <strong>{{ ev.categoria?.nombre }}</strong>
-                </span>
+                <span *ngIf="evFull.modalidad">Modalidad: <strong>{{ evFull.modalidad }}</strong></span>
+                <span *ngIf="evFull.periodo?.codigo">• Período: <strong>{{ evFull.periodo?.codigo }}</strong></span>
+                <span *ngIf="evFull.categoria?.nombre">• Categoría: <strong>{{ evFull.categoria?.nombre }}</strong></span>
               </div>
 
-              <p class="mt-3 text-sm text-gray-700" *ngIf="ev.descripcion_corta; else evDescripcionLarga">
-                {{ ev.descripcion_corta }}
+              <p class="mt-4 text-sm text-gray-800" *ngIf="evFull.descripcion_corta; else descLargaEvento">
+                {{ evFull.descripcion_corta }}
               </p>
-              <ng-template #evDescripcionLarga>
-                <p *ngIf="ev.descripcion_larga" class="mt-3 text-sm text-gray-700">
-                  {{ ev.descripcion_larga }}
+              <ng-template #descLargaEvento>
+                <p *ngIf="evFull.descripcion_larga" class="mt-4 text-sm text-gray-800 whitespace-pre-line">
+                  {{ evFull.descripcion_larga }}
                 </p>
               </ng-template>
 
-              <div class="mt-3 text-xs text-gray-500 space-y-1">
-                <div *ngIf="ev.sesiones?.length">
-                  <span class="font-semibold">Próxima sesión: </span>
-                  <span>
-                    {{ ev.sesiones[0].fecha }}
-                    {{ ev.sesiones[0].hora_inicio }} - {{ ev.sesiones[0].hora_fin }}
-                  </span>
-                </div>
-                <div *ngIf="ev.requiere_inscripcion">
-                  <span class="font-semibold">Inscripción:</span>
-                  <span *ngIf="ev.inscripcion_desde"> desde {{ ev.inscripcion_desde }}</span>
-                  <span *ngIf="ev.inscripcion_hasta"> • hasta {{ ev.inscripcion_hasta }}</span>
-                  <span *ngIf="ev.cupo_maximo"> • Cupo: {{ ev.cupo_maximo }}</span>
-                </div>
-                <div *ngIf="ev.lugar_detallado">
-                  <span class="font-semibold">Lugar: </span>{{ ev.lugar_detallado }}
-                </div>
-              </div>
-
-              <!-- Carrusel de imágenes del evento -->
-              <div *ngIf="ev.imagenes?.length" class="mt-4">
-                <div class="relative rounded-lg overflow-hidden border border-gray-100">
-                  <img
-                    class="w-full h-48 object-cover"
-                    [src]="ev.imagenes[getEventoSlideIndex(ev)].url"
-                    [alt]="ev.imagenes[getEventoSlideIndex(ev)].titulo || ev.titulo"
-                  />
-                  <button
-                    *ngIf="ev.imagenes.length > 1"
-                    class="absolute inset-y-0 left-0 px-2 flex items-center text-white text-sm bg-black/30 hover:bg-black/50"
-                    (click)="prevEventoImage(ev)">
-                    ‹
-                  </button>
-                  <button
-                    *ngIf="ev.imagenes.length > 1"
-                    class="absolute inset-y-0 right-0 px-2 flex items-center text-white text-sm bg-black/30 hover:bg-black/50"
-                    (click)="nextEventoImage(ev)">
-                    ›
-                  </button>
-                  <div class="absolute bottom-2 right-2 text-[10px] px-2 py-0.5 rounded-full bg-black/60 text-white">
-                    {{ getEventoSlideIndex(ev) + 1 }} / {{ ev.imagenes.length }}
+              <div class="mt-4 grid sm:grid-cols-2 gap-3 text-xs text-gray-600">
+                <div>
+                  <h5 class="font-semibold text-gray-800 mb-1">Sesiones</h5>
+                  <div *ngIf="evFull.sesiones?.length; else sinSesiones">
+                    <ul class="space-y-1">
+                      <li *ngFor="let s of evFull.sesiones">
+                        {{ s.fecha }} • {{ s.hora_inicio }} - {{ s.hora_fin }} ({{ s.estado }})
+                      </li>
+                    </ul>
                   </div>
+                  <ng-template #sinSesiones>
+                    <p class="text-gray-400">Sin sesiones registradas.</p>
+                  </ng-template>
+                </div>
+
+                <div class="space-y-1">
+                  <h5 class="font-semibold text-gray-800 mb-1">Inscripción</h5>
+                  <p *ngIf="evFull.requiere_inscripcion; else noReqEv" class="text-xs text-gray-600">
+                    Requiere inscripción previa.
+                    <br />
+                    <span *ngIf="evFull.inscripcion_desde">Desde: {{ evFull.inscripcion_desde }}</span>
+                    <br *ngIf="evFull.inscripcion_hasta" />
+                    <span *ngIf="evFull.inscripcion_hasta">Hasta: {{ evFull.inscripcion_hasta }}</span>
+                    <br *ngIf="evFull.cupo_maximo" />
+                    <span *ngIf="evFull.cupo_maximo">Cupo máximo: {{ evFull.cupo_maximo }}</span>
+                  </p>
+                  <ng-template #noReqEv>
+                    <p class="text-xs text-gray-500">Este evento no requiere inscripción previa.</p>
+                  </ng-template>
+
+                  <p *ngIf="evFull.lugar_detallado" class="text-xs text-gray-600 mt-2">
+                    <span class="font-semibold">Lugar:</span> {{ evFull.lugar_detallado }}
+                  </p>
+
+                  <p *ngIf="evFull.url_enlace_virtual" class="text-xs text-blue-600 mt-1">
+                    Enlace virtual: {{ evFull.url_enlace_virtual }}
+                  </p>
+
+                  <button
+                    *ngIf="puedeInscribirseEventoDetalle"
+                    class="mt-3 inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium
+                           bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                    (click)="inscribirDesdeDetalleEvento()"
+                    [disabled]="inscribiendoId?.tipo === 'evento' && inscribiendoId?.id === selectedEventoBase?.id">
+                    Inscribirme en este evento
+                  </button>
                 </div>
               </div>
             </div>
           </article>
-        </div>
 
-        <ng-template #noEventosBlog>
-          <p class="text-sm text-gray-500">No hay eventos para mostrar.</p>
+          <ng-template #placeholderEvento>
+            <div class="h-full flex items-center justify-center text-sm text-gray-400 border border-dashed border-gray-300 rounded-xl p-6">
+              Selecciona un evento de la lista para ver los detalles completos.
+            </div>
+          </ng-template>
+        </ng-container>
+      </div>
+    </div>
+  </section>
+
+  <!-- ╔═══════════════════════ PROYECTOS ═════════════════════╗ -->
+  <section class="mt-10">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+      <h3 class="text-xl font-semibold text-gray-800">Proyectos</h3>
+
+      <div class="inline-flex rounded-full bg-gray-100 p-1 text-xs sm:text-sm">
+        <button
+          type="button"
+          class="px-3 py-1 rounded-full"
+          [ngClass]="proyectoTab === 'inscritos'
+            ? 'bg-white shadow-sm text-gray-900'
+            : 'text-gray-500 hover:text-gray-800'"
+          (click)="proyectoTab = 'inscritos'">
+          Mis proyectos
+        </button>
+        <button
+          type="button"
+          class="px-3 py-1 rounded-full"
+          [ngClass]="proyectoTab === 'inscribibles'
+            ? 'bg-white shadow-sm text-gray-900'
+            : 'text-gray-500 hover:text-gray-800'"
+          (click)="proyectoTab = 'inscribibles'">
+          Para inscribirme
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <!-- Lista lateral de proyectos -->
+      <div class="xl:col-span-1 space-y-3 max-h-[520px] overflow-y-auto pr-1">
+        <ng-container *ngIf="proyectosLista.length; else noProyectosLista">
+          <article
+            *ngFor="let p of proyectosLista"
+            (click)="verDetalleProyecto(p)"
+            class="border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+            [ngClass]="{'border-indigo-400 bg-indigo-50/60': selectedProyectoBase?.id === p.id}">
+            <div class="flex items-start gap-3">
+              <div class="flex-1">
+                <h4 class="text-sm font-semibold text-gray-800 line-clamp-2">
+                  {{ p.titulo }}
+                </h4>
+                <p class="mt-1 text-xs text-gray-500 line-clamp-2" *ngIf="p.descripcion">
+                  {{ p.descripcion }}
+                </p>
+                <div class="mt-1 text-[11px] text-gray-500 flex flex-wrap gap-1">
+                  <span>Tipo: {{ p.tipo }}</span>
+                  <span>• {{ p.modalidad || 'Presencial' }}</span>
+                </div>
+              </div>
+
+              <div class="w-16 h-16 rounded-md overflow-hidden bg-gray-100 flex-shrink-0" *ngIf="p.imagenes?.length">
+                <img [src]="p.imagenes[0].url" class="w-full h-full object-cover" />
+              </div>
+            </div>
+          </article>
+        </ng-container>
+
+        <ng-template #noProyectosLista>
+          <p class="text-sm text-gray-500">
+            No hay proyectos en esta categoría.
+          </p>
         </ng-template>
       </div>
 
-      <!-- Proyectos (blog) -->
-      <div class="space-y-4">
-        <h4 class="text-lg font-semibold text-gray-700">Proyectos</h4>
+      <!-- Artículo principal del proyecto -->
+      <div class="xl:col-span-2">
+        <div *ngIf="loadingProyectoFull" class="flex items-center text-gray-500 text-sm">
+          <span class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400 mr-2"></span>
+          Cargando detalle del proyecto...
+        </div>
 
-        <div *ngIf="proyectosFull.length; else noProyectosBlog" class="space-y-4">
-          <article *ngFor="let p of proyectosFull"
+        <ng-container *ngIf="!loadingProyectoFull">
+          <article *ngIf="selectedProyectoFull as pFull; else placeholderProyecto"
                    class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="p-4 md:p-5">
-              <div class="flex items-start justify-between gap-3">
+            <!-- Imagen / carrusel -->
+            <div *ngIf="pFull.imagenes?.length" class="relative">
+              <img
+                class="w-full h-64 object-cover"
+                [src]="pFull.imagenes[proyectoSlideIndex].url"
+                [alt]="pFull.imagenes[proyectoSlideIndex].titulo || pFull.titulo"
+              />
+              <button
+                *ngIf="pFull.imagenes.length > 1"
+                class="absolute inset-y-0 left-0 px-2 flex items-center text-white text-sm bg-black/30 hover:bg-black/50"
+                (click)="prevProyectoImage()">
+                ‹
+              </button>
+              <button
+                *ngIf="pFull.imagenes.length > 1"
+                class="absolute inset-y-0 right-0 px-2 flex items-center text-white text-sm bg-black/30 hover:bg-black/50"
+                (click)="nextProyectoImage()">
+                ›
+              </button>
+              <div class="absolute bottom-2 right-2 text-[10px] px-2 py-0.5 rounded-full bg-black/60 text-white">
+                {{ proyectoSlideIndex + 1 }} / {{ pFull.imagenes.length }}
+              </div>
+            </div>
+
+            <div class="p-4 md:p-6">
+              <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h5 class="text-base md:text-lg font-semibold text-gray-900">
-                    {{ p.titulo }}
-                  </h5>
-                  <p class="text-xs text-gray-500 mt-0.5">
-                    Código: {{ p.codigo }} • Tipo: {{ p.tipo }} • {{ p.modalidad || 'Presencial' }}
+                  <h4 class="text-xl font-semibold text-gray-900">
+                    {{ pFull.titulo }}
+                  </h4>
+                  <p class="text-xs text-gray-500 mt-1">
+                    Código: {{ pFull.codigo }} • Tipo: {{ pFull.tipo }} • {{ pFull.modalidad || 'Presencial' }}
                   </p>
                 </div>
-                <span class="px-2 py-1 text-[10px] md:text-xs rounded-full"
+                <span class="px-2 py-1 text-xs rounded-full"
                       [ngClass]="{
-                        'bg-green-50 text-green-700': p.estado === 'EN_CURSO',
-                        'bg-yellow-50 text-yellow-700': p.estado === 'PLANIFICADO',
-                        'bg-gray-100 text-gray-600': p.estado !== 'EN_CURSO' && p.estado !== 'PLANIFICADO'
+                        'bg-green-50 text-green-700': pFull.estado === 'EN_CURSO',
+                        'bg-yellow-50 text-yellow-700': pFull.estado === 'PLANIFICADO',
+                        'bg-gray-100 text-gray-600': pFull.estado !== 'EN_CURSO' && pFull.estado !== 'PLANIFICADO'
                       }">
-                  {{ p.estado }}
+                  {{ pFull.estado }}
                 </span>
               </div>
 
-              <p class="mt-3 text-sm text-gray-700" *ngIf="p.descripcion">
-                {{ p.descripcion }}
+              <p class="mt-4 text-sm text-gray-800" *ngIf="pFull.descripcion">
+                {{ pFull.descripcion }}
               </p>
 
-              <div class="mt-3 text-xs text-gray-500 space-y-1">
+              <div class="mt-4 grid sm:grid-cols-2 gap-3 text-xs text-gray-600">
                 <div>
-                  <span class="font-semibold">Horas planificadas: </span>{{ p.horas_planificadas }} h
-                  <span *ngIf="p.horas_minimas_participante">
-                    (mín. {{ p.horas_minimas_participante }} h)
-                  </span>
+                  <h5 class="font-semibold text-gray-800 mb-1">Carga horaria & niveles</h5>
+                  <p>
+                    Horas planificadas: <strong>{{ pFull.horas_planificadas }}</strong>
+                    <span *ngIf="pFull.horas_minimas_participante">
+                      (mínimo por alumno: {{ pFull.horas_minimas_participante }})
+                    </span>
+                  </p>
+                  <p class="mt-1">
+                    Niveles: <strong>{{ getProyectoNiveles(pFull) }}</strong>
+                  </p>
                 </div>
-                <div *ngIf="p.ciclos?.length">
-                  <span class="font-semibold">Niveles: </span>
-                  {{ getProyectoNiveles(p) }}
-                </div>
-                <div>
-                  <span class="font-semibold">Procesos: </span>
-                  {{ p.procesos.length }}
-                  <span *ngIf="p.procesos.length">
-                    • Sesiones: {{ getProyectoTotalSesiones(p) }}
-                  </span>
-                </div>
-              </div>
 
-              <!-- Carrusel de imágenes del proyecto -->
-              <div *ngIf="p.imagenes?.length" class="mt-4">
-                <div class="relative rounded-lg overflow-hidden border border-gray-100">
-                  <img
-                    class="w-full h-48 object-cover"
-                    [src]="p.imagenes[getProyectoSlideIndex(p)].url"
-                    [alt]="p.imagenes[getProyectoSlideIndex(p)].titulo || p.titulo"
-                  />
+                <div>
+                  <h5 class="font-semibold text-gray-800 mb-1">Procesos y sesiones</h5>
+                  <p>
+                    Procesos: <strong>{{ pFull.procesos.length }}</strong>
+                    <span *ngIf="pFull.procesos.length">
+                      • Sesiones: <strong>{{ getProyectoTotalSesiones(pFull) }}</strong>
+                    </span>
+                  </p>
+                  <ul *ngIf="pFull.procesos?.length" class="mt-1 space-y-0.5 max-h-32 overflow-y-auto pr-1">
+                    <li *ngFor="let pr of pFull.procesos">
+                      <span class="font-semibold">{{ pr.nombre }}</span>
+                      <span class="text-gray-500">
+                        – {{ pr.sesiones?.length || 0 }} sesiones
+                      </span>
+                    </li>
+                  </ul>
+
                   <button
-                    *ngIf="p.imagenes.length > 1"
-                    class="absolute inset-y-0 left-0 px-2 flex items-center text-white text-sm bg-black/30 hover:bg-black/50"
-                    (click)="prevProyectoImage(p)">
-                    ‹
+                    *ngIf="puedeInscribirseProyectoDetalle"
+                    class="mt-3 inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium
+                           bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+                    (click)="inscribirDesdeDetalleProyecto()"
+                    [disabled]="inscribiendoId?.tipo === 'proyecto' && inscribiendoId?.id === selectedProyectoBase?.id">
+                    Inscribirme en este proyecto
                   </button>
-                  <button
-                    *ngIf="p.imagenes.length > 1"
-                    class="absolute inset-y-0 right-0 px-2 flex items-center text-white text-sm bg-black/30 hover:bg-black/50"
-                    (click)="nextProyectoImage(p)">
-                    ›
-                  </button>
-                  <div class="absolute bottom-2 right-2 text-[10px] px-2 py-0.5 rounded-full bg-black/60 text-white">
-                    {{ getProyectoSlideIndex(p) + 1 }} / {{ p.imagenes.length }}
-                  </div>
                 </div>
               </div>
             </div>
           </article>
-        </div>
 
-        <ng-template #noProyectosBlog>
-          <p class="text-sm text-gray-500">No hay proyectos para mostrar.</p>
-        </ng-template>
+          <ng-template #placeholderProyecto>
+            <div class="h-full flex items-center justify-center text-sm text-gray-400 border border-dashed border-gray-300 rounded-xl p-6">
+              Selecciona un proyecto de la lista para ver los detalles completos.
+            </div>
+          </ng-template>
+        </ng-container>
       </div>
     </div>
   </section>

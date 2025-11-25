@@ -1,7 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe, NgIf, NgFor } from '@angular/common';
-import { forkJoin } from 'rxjs';
-
 import { DashboardApi } from './data-access/dashboard.api';
 import {
   DashboardData,
@@ -16,7 +14,7 @@ import {
   standalone: true,
   templateUrl: './dashboard.page.html',
   imports: [
-    CommonModule,
+    CommonModule,  // habilita *ngIf, *ngFor, ngClass, pipes
     NgIf,
     NgFor,
     DecimalPipe,
@@ -27,26 +25,31 @@ export class DashboardPage implements OnInit {
   error: string | null = null;
   data: DashboardData | null = null;
 
-  // muro / blog
-  eventosFull: VmEventoFull[] = [];
-  proyectosFull: VmProyectoFull[] = [];
-  loadingFull = false;
+  // pestañas tipo "sección del periódico"
+  eventoTab: 'inscritos' | 'inscribibles' = 'inscritos';
+  proyectoTab: 'inscritos' | 'inscribibles' = 'inscritos';
+
+  // detalle tipo "artículo"
+  selectedEventoBase: VmEvento | null = null;
+  selectedEventoFull: VmEventoFull | null = null;
+  loadingEventoFull = false;
+  eventoSlideIndex = 0;
+
+  selectedProyectoBase: VmProyecto | null = null;
+  selectedProyectoFull: VmProyectoFull | null = null;
+  loadingProyectoFull = false;
+  proyectoSlideIndex = 0;
 
   // para deshabilitar botón mientras se inscribe
   inscribiendoId: { tipo: 'evento' | 'proyecto'; id: number } | null = null;
-
-  // carrusel por card
-  private eventoSlideIndex: { [id: number]: number } = {};
-  private proyectoSlideIndex: { [id: number]: number } = {};
 
   constructor(private dashboardApi: DashboardApi) {}
 
   ngOnInit(): void {
     this.loadFeed();
-    this.loadFull(); // carga las listas FULL para el muro/blog
   }
 
-  // ───────── feed principal (contexto + contadores + inscritos/inscribibles) ─────────
+  // ───────── feed principal (contexto + contadores + listas resumidas) ─────────
 
   loadFeed(periodoId?: number): void {
     this.loading = true;
@@ -67,28 +70,6 @@ export class DashboardPage implements OnInit {
         this.error = 'Ocurrió un error al cargar el dashboard.';
         this.data = null;
         this.loading = false;
-      },
-    });
-  }
-
-  // ───────── muro de noticias: FULL ─────────
-
-  loadFull(): void {
-    this.loadingFull = true;
-
-    forkJoin({
-      eventos: this.dashboardApi.getEventosFull(),
-      proyectos: this.dashboardApi.getProyectosFull(),
-    }).subscribe({
-      next: (res) => {
-        this.eventosFull = res.eventos.data;
-        this.proyectosFull = res.proyectos.data;
-        this.loadingFull = false;
-      },
-      error: (err) => {
-        console.error('Error al cargar listas full', err);
-        // no pisamos el error general del feed
-        this.loadingFull = false;
       },
     });
   }
@@ -119,7 +100,125 @@ export class DashboardPage implements OnInit {
     return this.data?.contadores;
   }
 
-  // ───────── acciones de inscripción ─────────
+  // listas filtradas para el "muro"
+  get eventosLista(): VmEvento[] {
+    return this.eventoTab === 'inscritos'
+      ? this.eventosInscritos
+      : this.eventosInscribibles;
+  }
+
+  get proyectosLista(): VmProyecto[] {
+    return this.proyectoTab === 'inscritos'
+      ? this.proyectosInscritos
+      : this.proyectosInscribibles;
+  }
+
+  // ───────── detalle de EVENTO (usa /eventos/{id}/full) ─────────
+
+  verDetalleEvento(ev: VmEvento): void {
+    this.selectedEventoBase = ev;
+    this.selectedEventoFull = null;
+    this.loadingEventoFull = true;
+    this.eventoSlideIndex = 0;
+
+    this.dashboardApi.getEventoFull(ev.id).subscribe({
+      next: (resp) => {
+        if (resp.ok) {
+          this.selectedEventoFull = resp.data;
+        }
+        this.loadingEventoFull = false;
+      },
+      error: (err) => {
+        console.error('Error al cargar detalle de evento', err);
+        this.loadingEventoFull = false;
+      },
+    });
+  }
+
+  get puedeInscribirseEventoDetalle(): boolean {
+    return !!this.selectedEventoBase &&
+           !this.selectedEventoBase.progreso &&
+           this.selectedEventoBase.requiere_inscripcion;
+  }
+
+  inscribirDesdeDetalleEvento(): void {
+    if (!this.selectedEventoBase) return;
+    this.inscribirEvento(this.selectedEventoBase);
+  }
+
+  // carrusel de imágenes del evento seleccionado
+  nextEventoImage(): void {
+    if (!this.selectedEventoFull || !this.selectedEventoFull.imagenes?.length) return;
+    const total = this.selectedEventoFull.imagenes.length;
+    this.eventoSlideIndex = (this.eventoSlideIndex + 1) % total;
+  }
+
+  prevEventoImage(): void {
+    if (!this.selectedEventoFull || !this.selectedEventoFull.imagenes?.length) return;
+    const total = this.selectedEventoFull.imagenes.length;
+    this.eventoSlideIndex = (this.eventoSlideIndex - 1 + total) % total;
+  }
+
+  // ───────── detalle de PROYECTO (usa /proyectos/{id}/full) ─────────
+
+  verDetalleProyecto(p: VmProyecto): void {
+    this.selectedProyectoBase = p;
+    this.selectedProyectoFull = null;
+    this.loadingProyectoFull = true;
+    this.proyectoSlideIndex = 0;
+
+    this.dashboardApi.getProyectoFull(p.id).subscribe({
+      next: (resp) => {
+        if (resp.ok) {
+          this.selectedProyectoFull = resp.data;
+        }
+        this.loadingProyectoFull = false;
+      },
+      error: (err) => {
+        console.error('Error al cargar detalle de proyecto', err);
+        this.loadingProyectoFull = false;
+      },
+    });
+  }
+
+  get puedeInscribirseProyectoDetalle(): boolean {
+    // según tu modelo: en inscribibles progreso === null
+    return !!this.selectedProyectoBase &&
+           this.selectedProyectoBase.progreso === null;
+  }
+
+  inscribirDesdeDetalleProyecto(): void {
+    if (!this.selectedProyectoBase) return;
+    this.inscribirProyecto(this.selectedProyectoBase);
+  }
+
+  // carrusel de imágenes del proyecto seleccionado
+  nextProyectoImage(): void {
+    if (!this.selectedProyectoFull || !this.selectedProyectoFull.imagenes?.length) return;
+    const total = this.selectedProyectoFull.imagenes.length;
+    this.proyectoSlideIndex = (this.proyectoSlideIndex + 1) % total;
+  }
+
+  prevProyectoImage(): void {
+    if (!this.selectedProyectoFull || !this.selectedProyectoFull.imagenes?.length) return;
+    const total = this.selectedProyectoFull.imagenes.length;
+    this.proyectoSlideIndex = (this.proyectoSlideIndex - 1 + total) % total;
+  }
+
+  // ───────── helpers de info de proyecto (niveles, sesiones) ─────────
+
+  getProyectoNiveles(p: VmProyectoFull): string {
+    if (!p.ciclos || !p.ciclos.length) return 'N/D';
+    const niveles = Array.from(new Set(p.ciclos.map(c => c.nivel)));
+    return niveles.join(', ');
+  }
+
+  getProyectoTotalSesiones(p: VmProyectoFull): number {
+    if (!p.procesos || !p.procesos.length) return 0;
+    return p.procesos.reduce((acc, pr) => acc + (pr.sesiones?.length || 0), 0);
+  }
+
+  // ───────── acciones de inscripción (reutilizadas) ─────────
 
   inscribirEvento(ev: VmEvento): void {
     this.inscribiendoId = { tipo: 'evento', id: ev.id };
@@ -127,7 +226,7 @@ export class DashboardPage implements OnInit {
 
     this.dashboardApi.inscribirEnEvento(ev.id).subscribe({
       next: () => {
-        this.loadFeed();
+        this.loadFeed();        // refresca listas y contadores
         this.inscribiendoId = null;
       },
       error: (err) => {
@@ -153,66 +252,5 @@ export class DashboardPage implements OnInit {
         this.inscribiendoId = null;
       },
     });
-  }
-
-  // ───────── helpers de carrusel (eventos) ─────────
-
-  getEventoSlideIndex(ev: VmEventoFull): number {
-    const idx = this.eventoSlideIndex[ev.id];
-    if (idx == null || idx < 0 || idx >= (ev.imagenes?.length || 0)) {
-      return 0;
-    }
-    return idx;
-  }
-
-  nextEventoImage(ev: VmEventoFull): void {
-    if (!ev.imagenes || ev.imagenes.length < 2) return;
-    const current = this.getEventoSlideIndex(ev);
-    const next = (current + 1) % ev.imagenes.length;
-    this.eventoSlideIndex[ev.id] = next;
-  }
-
-  prevEventoImage(ev: VmEventoFull): void {
-    if (!ev.imagenes || ev.imagenes.length < 2) return;
-    const current = this.getEventoSlideIndex(ev);
-    const next = (current - 1 + ev.imagenes.length) % ev.imagenes.length;
-    this.eventoSlideIndex[ev.id] = next;
-  }
-
-  // ───────── helpers de carrusel (proyectos) ─────────
-
-  getProyectoSlideIndex(p: VmProyectoFull): number {
-    const idx = this.proyectoSlideIndex[p.id];
-    if (idx == null || idx < 0 || idx >= (p.imagenes?.length || 0)) {
-      return 0;
-    }
-    return idx;
-  }
-
-  nextProyectoImage(p: VmProyectoFull): void {
-    if (!p.imagenes || p.imagenes.length < 2) return;
-    const current = this.getProyectoSlideIndex(p);
-    const next = (current + 1) % p.imagenes.length;
-    this.proyectoSlideIndex[p.id] = next;
-  }
-
-  prevProyectoImage(p: VmProyectoFull): void {
-    if (!p.imagenes || p.imagenes.length < 2) return;
-    const current = this.getProyectoSlideIndex(p);
-    const next = (current - 1 + p.imagenes.length) % p.imagenes.length;
-    this.proyectoSlideIndex[p.id] = next;
-  }
-
-  // ───────── helpers de info de proyecto (niveles, sesiones) ─────────
-
-  getProyectoNiveles(p: VmProyectoFull): string {
-    if (!p.ciclos || !p.ciclos.length) return 'N/D';
-    const niveles = Array.from(new Set(p.ciclos.map(c => c.nivel)));
-    return niveles.join(', ');
-  }
-
-  getProyectoTotalSesiones(p: VmProyectoFull): number {
-    if (!p.procesos || !p.procesos.length) return 0;
-    return p.procesos.reduce((acc, pr) => acc + (pr.sesiones?.length || 0), 0);
   }
 }

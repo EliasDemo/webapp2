@@ -51,7 +51,6 @@ export const routes: Routes = [
         path: 'mis-proyectos',
         loadChildren: () =>
           import('./features/mis-proyectos/mp.routes').then(m => m.MP_ROUTES),
-        // Si exportas default: .then(m => m.default),
       },
 
       // Eventos (admin)
@@ -101,7 +100,7 @@ export const routes: Routes = [
           ),
       },
 
-      // 🔹 Ruta GLOBAL para QR (proyectos + eventos)
+      // 🔹 Registro QR
       {
         path: 'registro-qr/:sesionId',
         loadComponent: () =>
@@ -109,13 +108,22 @@ export const routes: Routes = [
             .then(m => m.RegisterQrPage),
         title: 'Registro de asistencia (QR)',
         data: { feature: 'vm', level: 'qr-student' },
-        // ⚠️ Ajusta la ruta del import si moviste el componente a otra carpeta
       },
 
       {
         path: 'perfil',
         loadChildren: () =>
           import('./features/perfil/perfil.routes').then(m => m.PERFIL_ROUTES),
+      },
+
+      // ⚡️ Nuevo: Inspector de alumnos
+      {
+        path: 'ai',
+        loadChildren: () =>
+          import('./features/users/alumnoinspector.routes')
+            .then(m => m.AI_ROUTES),
+        // Si prefieres usar el export default:
+        // .then(m => m.default),
       },
 
       { path: 'no-autorizado', component: NoAutorizadoPage },

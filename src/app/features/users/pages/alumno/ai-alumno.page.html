@@ -1,0 +1,379 @@
+<!-- src/app/features/alumnoinspector/pages/alumno/ai-alumno.page.html -->
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-violet-50/40 pb-16">
+
+  <!-- Header -->
+  <header class="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-xl bg-violet-100 text-violet-700">
+            <i class="fa-solid fa-user-magnifying-glass text-lg"></i>
+          </div>
+          <div>
+            <nav class="text-xs text-slate-500 mb-1 flex items-center gap-1">
+              <a routerLink="/" class="hover:text-slate-700 font-medium transition-colors">Inicio</a>
+              <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              <a routerLink="/ai/resumen" class="hover:text-slate-700 font-medium transition-colors">
+                Inspector
+              </a>
+              <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              <span class="text-violet-600 font-semibold">Alumno</span>
+            </nav>
+            <h1 class="text-2xl font-bold text-slate-900">Inspector de Alumno</h1>
+            <p class="text-sm text-slate-600 mt-1">
+              Consulta matrículas, horas VCM, proyectos y eventos de un estudiante
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 pt-8 space-y-8">
+
+    <!-- Alertas -->
+    <div *ngIf="error()"
+         class="rounded-2xl border border-rose-200 bg-white p-4 shadow-sm">
+      <div class="flex items-start gap-4">
+        <div class="flex-shrink-0 p-2 rounded-lg bg-rose-100 text-rose-600">
+          <i class="fa-solid fa-circle-exclamation text-sm"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-semibold text-rose-900 mb-1">No se pudo completar la operación</div>
+          <div class="text-sm text-rose-700">{{ error() }}</div>
+
+          <div *ngIf="choices()?.length" class="mt-3 rounded-xl border border-amber-200 bg-amber-50/60 p-3">
+            <div class="text-sm font-semibold text-amber-800 mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-lightbulb text-amber-600"></i>
+              EP-SEDE disponibles para tu usuario
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button
+                *ngFor="let c of choices()"
+                type="button"
+                class="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-800 shadow-sm hover:bg-amber-50 transition-colors"
+                (click)="usarEpSede(c)">
+                <i class="fa-solid fa-building-columns text-amber-600 text-xs"></i>
+                EP-SEDE {{ c }}
+              </button>
+            </div>
+            <p class="text-xs text-amber-700 mt-2">
+              Selecciona una EP-SEDE y vuelve a buscar al alumno.
+            </p>
+          </div>
+        </div>
+        <button
+          (click)="error.set(null)"
+          class="flex-shrink-0 text-slate-400 hover:text-slate-600 transition-colors">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtros / búsqueda -->
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-xl bg-violet-100 text-violet-600">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">Buscar alumno</h2>
+            <p class="text-xs text-slate-600">Usa código de estudiante o ID de expediente</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- EP-SEDE -->
+        <div class="space-y-1">
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
+            EP-SEDE (opcional)
+          </label>
+          <input
+            type="number"
+            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm transition-colors focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
+            [ngModel]="epSedeId() ?? ''"
+            (ngModelChange)="epSedeId.set($event ? +$event : null)"
+            placeholder="EP-SEDE del alumno" />
+          <p class="text-[11px] text-slate-500">
+            Si lo dejas vacío, el backend intenta resolverlo según tus permisos.
+          </p>
+        </div>
+
+        <!-- Código -->
+        <div class="space-y-1">
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
+            Código de estudiante
+          </label>
+          <input
+            type="text"
+            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm transition-colors focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
+            [ngModel]="searchCodigo()"
+            (ngModelChange)="searchCodigo.set($event)"
+            placeholder="Ej: 00012345" />
+        </div>
+
+        <!-- Expediente ID -->
+        <div class="space-y-1">
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
+            ID de expediente
+          </label>
+          <input
+            type="number"
+            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm transition-colors focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
+            [ngModel]="searchExpedienteId() ?? ''"
+            (ngModelChange)="searchExpedienteId.set($event ? +$event : null)"
+            placeholder="Alternativa al código" />
+        </div>
+
+        <!-- Botón -->
+        <div class="flex items-end">
+          <button
+            (click)="buscarAlumno()"
+            [disabled]="loading() || (!searchCodigo() && !searchExpedienteId())"
+            class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg w-full md:w-auto">
+            <i class="fa-solid fa-magnifying-glass" [class.hidden]="loading()"></i>
+            <i *ngIf="loading()" class="fa-solid fa-circle-notch animate-spin"></i>
+            {{ loading() ? 'Buscando...' : 'Buscar' }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Datos del alumno -->
+    <section *ngIf="alumnoData() as a" class="space-y-6">
+
+      <!-- Cabecera alumno -->
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-violet-100 text-violet-700 grid place-items-center">
+              <i class="fa-solid fa-user text-xl"></i>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-slate-500">
+                {{ a.usuario.full_name || 'Alumno sin nombre registrado' }}
+              </div>
+              <div class="text-xs text-slate-500 mt-1">
+                <span class="font-mono text-slate-800">Código: {{ a.expediente.codigo_estudiante || '—' }}</span>
+                ·
+                <span>ID expediente: {{ a.expediente.id }}</span>
+              </div>
+              <div class="mt-1 text-xs text-slate-500">
+                <span *ngIf="a.usuario.email">📧 {{ a.usuario.email }}</span>
+                <span *ngIf="a.usuario.celular" class="ml-2">📱 {{ a.usuario.celular }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2 text-xs">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 border border-slate-200 text-slate-700">
+              <i class="fa-solid fa-building-columns text-[10px]"></i>
+              EP-SEDE {{ a.expediente.ep_sede_id }}
+            </span>
+            <span
+              class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 border text-xs font-semibold"
+              [ngClass]="(a.expediente.estado || '').toUpperCase()==='ACTIVO'
+                         ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                         : 'bg-slate-50 border-slate-200 text-slate-600'">
+              <i class="fa-solid fa-circle text-[6px]"></i>
+              {{ a.expediente.estado || 'SIN ESTADO' }}
+            </span>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 border border-indigo-200 text-indigo-700">
+              <i class="fa-solid fa-layer-group text-[10px]"></i>
+              Ciclo {{ a.expediente.ciclo || '—' }} · Grupo {{ a.expediente.grupo || '—' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid 2x2: matrículas, VCM, eventos -->
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <!-- Matrículas -->
+        <div class="xl:col-span-1 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="p-2 rounded-xl bg-slate-100 text-slate-600">
+              <i class="fa-solid fa-graduation-cap text-sm"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-slate-900">Matrículas</h3>
+              <p class="text-xs text-slate-500">
+                Historial por período
+              </p>
+            </div>
+          </div>
+
+          <div *ngIf="!matriculas().length" class="text-xs text-slate-500">
+            No se encontraron matrículas para este alumno.
+          </div>
+
+          <div *ngIf="matriculas().length" class="max-h-64 overflow-auto">
+            <table class="w-full text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th class="px-2 py-2 text-left font-semibold text-slate-700">Período</th>
+                  <th class="px-2 py-2 text-left font-semibold text-slate-700">Ciclo/Grupo</th>
+                  <th class="px-2 py-2 text-left font-semibold text-slate-700">Fecha</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr *ngFor="let m of matriculas(); trackBy: trackMatricula" class="hover:bg-slate-50/50">
+                  <td class="px-2 py-2">
+                    <div class="font-mono text-slate-800">{{ m.periodo_codigo }}</div>
+                    <div class="text-[11px] text-slate-500">
+                      {{ m.periodo_estado || '—' }}
+                    </div>
+                  </td>
+                  <td class="px-2 py-2">
+                    <div class="text-slate-800">
+                      C {{ m.ciclo_matricula || '—' }} / G {{ m.grupo || '—' }}
+                    </div>
+                    <div class="text-[11px] text-slate-500">
+                      {{ m.modalidad || '—' }}
+                    </div>
+                  </td>
+                  <td class="px-2 py-2">
+                    <div class="text-slate-800">
+                      {{ m.fecha_matricula || '—' }}
+                    </div>
+                    <div class="text-[11px] text-slate-500">
+                      {{ m.modo_contrato || '—' }}
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- VCM -->
+        <div class="xl:col-span-1 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="p-2 rounded-xl bg-emerald-100 text-emerald-600">
+              <i class="fa-solid fa-clock text-sm"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-slate-900">Horas VCM</h3>
+              <p class="text-xs text-slate-500">
+                Por período y proyecto
+              </p>
+            </div>
+          </div>
+
+          <div *ngIf="!vcmPeriodos().length" class="text-xs text-slate-500">
+            No se encontraron registros de horas VCM.
+          </div>
+
+          <div *ngIf="vcmPeriodos().length" class="max-h-64 overflow-auto space-y-3">
+            <div *ngFor="let p of vcmPeriodos(); trackBy: trackVcm"
+                 class="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+              <div class="flex items-center justify-between text-xs">
+                <div>
+                  <div class="font-mono text-slate-900">{{ p.periodo_codigo }}</div>
+                  <div class="text-[11px] text-slate-500">
+                    {{ p.periodo_estado || '—' }}
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm font-semibold text-emerald-700">
+                    {{ p.total_horas | number:'1.1-1' }} h
+                  </div>
+                  <div class="text-[11px] text-slate-500">
+                    {{ p.proyectos.length }} proyecto(s)
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="p.proyectos.length" class="mt-2 text-[11px] text-slate-600 space-y-1">
+                <div *ngFor="let pr of p.proyectos">
+                  <span class="font-semibold">{{ pr.codigo || '—' }}</span>
+                  · {{ pr.titulo || 'Sin título' }}
+                  · <span class="text-emerald-700 font-semibold">
+                    {{ pr.horas | number:'1.1-1' }} h
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Eventos -->
+        <div class="xl:col-span-1 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="p-2 rounded-xl bg-indigo-100 text-indigo-600">
+              <i class="fa-solid fa-calendar-star text-sm"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-slate-900">Eventos</h3>
+              <p class="text-xs text-slate-500">
+                Eventos en los que participa el alumno
+              </p>
+            </div>
+          </div>
+
+          <div *ngIf="!eventos().length" class="text-xs text-slate-500">
+            Este alumno aún no tiene participación en eventos.
+          </div>
+
+          <div *ngIf="eventos().length" class="max-h-64 overflow-auto space-y-3">
+            <div
+              *ngFor="let e of eventos(); trackBy: trackEvento"
+              class="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+              <div class="flex items-center justify-between">
+                <div class="text-xs">
+                  <div class="font-semibold text-slate-900">
+                    {{ e.titulo || 'Evento sin título' }}
+                  </div>
+                  <div class="text-[11px] text-slate-500">
+                    {{ e.periodo.codigo }} · {{ e.modalidad || '—' }}
+                  </div>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                  <span
+                    class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                    [ngClass]="eventoEstadoBadge(e)">
+                    <i class="fa-solid fa-circle text-[6px]"></i>
+                    {{ e.participacion.estado || 'SIN ESTADO' }}
+                  </span>
+                  <select
+                    class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-[11px] focus:border-violet-500 focus:ring-1 focus:ring-violet-200"
+                    [ngModel]="e.participacion.estado"
+                    (ngModelChange)="actualizarEstadoEvento(e, $event)">
+                    <option [ngValue]="e.participacion.estado">— Cambiar estado —</option>
+                    <option value="INSCRITO">INSCRITO</option>
+                    <option value="CONFIRMADO">CONFIRMADO</option>
+                    <option value="FINALIZADO">FINALIZADO</option>
+                    <option value="CANCELADO">CANCELADO</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Skeleton cuando no hay datos aún -->
+    <section *ngIf="!tieneDatos() && !loading()" class="rounded-2xl border border-dashed border-slate-200 bg-white/70 p-6 text-center text-sm text-slate-500">
+      <p>
+        Busca un alumno por código o ID de expediente para ver su información académica, horas VCM,
+        proyectos y eventos.
+      </p>
+    </section>
+
+    <!-- Loader global -->
+    <div *ngIf="loading()" class="fixed inset-0 bg-white/70 backdrop-blur-sm z-50 grid place-items-center">
+      <div class="text-center">
+        <div class="relative mx-auto">
+          <div class="w-14 h-14 rounded-full border-4 border-slate-200"></div>
+          <div class="absolute inset-0 w-14 h-14 animate-spin rounded-full border-4 border-violet-600 border-t-transparent"></div>
+        </div>
+        <div class="mt-3 text-sm font-semibold text-slate-900">Procesando...</div>
+      </div>
+    </div>
+
+  </main>
+</div>

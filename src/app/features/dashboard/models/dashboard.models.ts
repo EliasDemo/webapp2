@@ -46,14 +46,14 @@ export interface DashboardContadores {
   faltas_proyectos: number;
 }
 
-// ───────────────── eventos ─────────────────
+// ───────────────── eventos (feed) ─────────────────
 
 export interface VmEventoImagen {
   id: number;
   url: string;
   path: string | null;
   titulo: string | null;
-  // extras que vienen en los endpoints FULL
+  // extras posibles desde los endpoints FULL
   disk?: string | null;
   visibilidad?: string | null;
 }
@@ -111,14 +111,14 @@ export interface VmEvento {
   ventana?: VmEventoVentana;
 }
 
-// ───────────────── proyectos ─────────────────
+// ───────────────── proyectos (feed) ─────────────────
 
 export interface VmProyectoImagen {
   id: number;
   url: string;
   path: string | null;
   titulo: string | null;
-  // extras que vienen en los endpoints FULL
+  // extras posibles desde los endpoints FULL
   disk?: string | null;
   visibilidad?: string | null;
 }
@@ -172,7 +172,7 @@ export interface VmProyecto {
   participacion: VmProyectoParticipacion | null;
 }
 
-// ───────────────── FULL: EVENTOS ─────────────────
+// ───────────────── FULL: EVENTOS (detalle árbol completo) ─────────────────
 
 export interface VmEventoPeriodo {
   id: number;
@@ -213,7 +213,13 @@ export interface VmEventoFull {
   imagenes: VmEventoImagen[];
 }
 
-// ───────────────── FULL: PROYECTOS ─────────────────
+// Respuesta de GET /eventos/{id}/full
+export interface VmEventoFullResponse {
+  ok: boolean;
+  data: VmEventoFull;
+}
+
+// ───────────────── FULL: PROYECTOS (detalle árbol completo) ─────────────────
 
 export interface VmProyectoCicloFull {
   id: number;
@@ -252,14 +258,8 @@ export interface VmProyectoFull {
   imagenes: VmProyectoImagen[];
 }
 
-// ───────────────── Respuestas de los endpoints FULL ─────────────────
-
-export interface VmEventosFullResponse {
+// Respuesta de GET /proyectos/{id}/full
+export interface VmProyectoFullResponse {
   ok: boolean;
-  data: VmEventoFull[];
-}
-
-export interface VmProyectosFullResponse {
-  ok: boolean;
-  data: VmProyectoFull[];
+  data: VmProyectoFull;
 }

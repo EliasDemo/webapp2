@@ -3,8 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   DashboardFeedResponse,
-  VmEventosFullResponse,
-  VmProyectosFullResponse,
+  VmEventoFullResponse,
+  VmProyectoFullResponse,
 } from '../models/dashboard.models';
 import { environment } from '../../../../environments/environment';
 
@@ -29,14 +29,18 @@ export class DashboardApi {
     });
   }
 
-  // Eventos FULL (muro/blog)
-  getEventosFull(): Observable<VmEventosFullResponse> {
-    return this.http.get<VmEventosFullResponse>(`${environment.apiUrl}/eventos/full`);
+  // Detalle FULL de un evento (árbol completo)
+  getEventoFull(eventoId: number): Observable<VmEventoFullResponse> {
+    return this.http.get<VmEventoFullResponse>(
+      `${environment.apiUrl}/eventos/${eventoId}/full`
+    );
   }
 
-  // Proyectos FULL (muro/blog)
-  getProyectosFull(): Observable<VmProyectosFullResponse> {
-    return this.http.get<VmProyectosFullResponse>(`${environment.apiUrl}/proyectos/full`);
+  // Detalle FULL de un proyecto (árbol completo)
+  getProyectoFull(proyectoId: number): Observable<VmProyectoFullResponse> {
+    return this.http.get<VmProyectoFullResponse>(
+      `${environment.apiUrl}/proyectos/${proyectoId}/full`
+    );
   }
 
   // Inscripción a EVENTO (ya manejada por tu backend)

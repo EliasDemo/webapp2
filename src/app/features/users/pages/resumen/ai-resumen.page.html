@@ -1,0 +1,301 @@
+<!-- src/app/features/alumnoinspector/pages/resumen/ai-resumen.page.html -->
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50/40 pb-16">
+
+  <!-- Header -->
+  <header class="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-xl bg-indigo-100 text-indigo-700">
+            <i class="fa-solid fa-user-graduate text-lg"></i>
+          </div>
+          <div>
+            <nav class="text-xs text-slate-500 mb-1 flex items-center gap-1">
+              <a routerLink="/" class="hover:text-slate-700 font-medium transition-colors">Inicio</a>
+              <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              <span class="text-indigo-600 font-semibold">Inspector de alumnos</span>
+            </nav>
+            <h1 class="text-2xl font-bold text-slate-900">Resumen EP-SEDE</h1>
+            <p class="text-sm text-slate-600 mt-1">
+              Vista global de alumnos, horas VCM y participación en eventos
+            </p>
+          </div>
+        </div>
+
+        <div class="hidden md:flex items-center gap-3">
+          <a
+            routerLink="/ai/alumno"
+            class="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-white px-4 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 transition-all duration-200 shadow-sm hover:shadow-md">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            Ir al inspector por alumno
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 pt-8 space-y-8">
+
+    <!-- Alertas -->
+    <div *ngIf="error()"
+         class="rounded-2xl border border-rose-200 bg-white p-4 shadow-sm">
+      <div class="flex items-start gap-4">
+        <div class="flex-shrink-0 p-2 rounded-lg bg-rose-100 text-rose-600">
+          <i class="fa-solid fa-circle-exclamation text-sm"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-semibold text-rose-900 mb-1">No se pudo cargar el resumen</div>
+          <div class="text-sm text-rose-700">{{ error() }}</div>
+
+          <div *ngIf="choices()?.length" class="mt-3 rounded-xl border border-amber-200 bg-amber-50/60 p-3">
+            <div class="text-sm font-semibold text-amber-800 mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-lightbulb text-amber-600"></i>
+              EP-SEDE disponibles para tu usuario
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button
+                *ngFor="let c of choices()"
+                type="button"
+                class="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-800 shadow-sm hover:bg-amber-50 transition-colors"
+                (click)="usarEpSede(c)">
+                <i class="fa-solid fa-building-columns text-amber-600 text-xs"></i>
+                EP-SEDE {{ c }}
+              </button>
+            </div>
+            <p class="text-xs text-amber-700 mt-2">
+              Selecciona una EP-SEDE y vuelve a intentar.
+            </p>
+          </div>
+        </div>
+        <button
+          (click)="error.set(null)"
+          class="flex-shrink-0 text-slate-400 hover:text-slate-600 transition-colors">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-xl bg-indigo-100 text-indigo-600">
+            <i class="fa-solid fa-sliders"></i>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">Parámetros del resumen</h2>
+            <p class="text-xs text-slate-600">Selecciona período y EP-SEDE (si aplica)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Período -->
+        <div class="space-y-1">
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
+            Período académico <span class="text-rose-500">*</span>
+          </label>
+          <select
+            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            [ngModel]="selectedPeriodoId() ?? ''"
+            (ngModelChange)="selectedPeriodoId.set($event ? +$event : null)">
+            <option [ngValue]="null">— Selecciona un período —</option>
+            <option *ngFor="let p of periodos()" [ngValue]="p.id">
+              {{ p.anio }}-{{ p.ciclo }} {{ (p.estado||'')==='EN_CURSO' ? '• En curso' : '' }}
+            </option>
+          </select>
+          <p class="text-[11px] text-slate-500">
+            Se recomienda usar el período actual <span class="font-semibold">EN_CURSO</span>.
+          </p>
+        </div>
+
+        <!-- EP-SEDE -->
+        <div class="space-y-1">
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
+            EP-SEDE (opcional)
+          </label>
+          <input
+            type="number"
+            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            [ngModel]="epSedeId() ?? ''"
+            (ngModelChange)="epSedeId.set($event ? +$event : null)"
+            placeholder="Si gestionas varias sedes, puedes forzar una aquí" />
+          <p class="text-[11px] text-slate-500">
+            Si lo dejas vacío, el backend intentará resolverlo por tus permisos.
+          </p>
+        </div>
+
+        <!-- Botón -->
+        <div class="flex items-end">
+          <button
+            (click)="cargarResumen()"
+            [disabled]="loading() || !selectedPeriodoId()"
+            class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg w-full md:w-auto">
+            <i class="fa-solid fa-rotate-right" [class.hidden]="loading()"></i>
+            <i *ngIf="loading()" class="fa-solid fa-circle-notch animate-spin"></i>
+            {{ loading() ? 'Cargando...' : 'Actualizar resumen' }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Resumen principal -->
+    <section *ngIf="resumen() as r" class="space-y-6">
+
+      <!-- Cards principales -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                Estudiantes
+              </div>
+              <div class="mt-2 text-2xl font-black text-slate-900">
+                {{ r.stats.total_expedientes }}
+              </div>
+              <div class="mt-1 text-xs text-slate-500">
+                {{ r.stats.total_matriculados }} matriculados ·
+                {{ r.stats.total_no_matriculados }} sin matrícula
+              </div>
+            </div>
+            <div class="p-3 rounded-2xl bg-slate-100 text-slate-600">
+              <i class="fa-solid fa-users text-xl"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
+                Horas VCM (período)
+              </div>
+              <div class="mt-2 text-2xl font-black text-emerald-800">
+                {{ r.stats.total_horas_vcm_aprobadas | number:'1.0-1' }} h
+              </div>
+              <div class="mt-1 text-xs text-emerald-800">
+                {{ r.stats.total_con_horas_vcm }} alumnos con horas ·
+                {{ porcentajeConHoras() | number:'1.0-1' }}%
+              </div>
+            </div>
+            <div class="p-3 rounded-2xl bg-emerald-100 text-emerald-700">
+              <i class="fa-solid fa-clock text-xl"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
+                Eventos
+              </div>
+              <div class="mt-2 text-2xl font-black text-indigo-800">
+                {{ r.stats.total_eventos }}
+              </div>
+              <div class="mt-1 text-xs text-indigo-800">
+                {{ r.stats.participaciones_eventos }} participaciones ·
+                {{ r.stats.alumnos_con_eventos }} alumnos ·
+                {{ porcentajeAlumnosEventos() | number:'1.0-1' }}%
+              </div>
+            </div>
+            <div class="p-3 rounded-2xl bg-indigo-100 text-indigo-700">
+              <i class="fa-solid fa-calendar-star text-xl"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detalle secundario -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="p-2 rounded-xl bg-slate-100 text-slate-600">
+              <i class="fa-solid fa-graduation-cap text-sm"></i>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-slate-900">
+                Situación académica
+              </div>
+              <div class="text-xs text-slate-500">
+                Período {{ r.periodo.codigo }} · Estado {{ r.periodo.estado || '—' }}
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2 text-xs text-slate-700">
+            <div class="flex items-center justify-between">
+              <span>Matriculados con horas VCM</span>
+              <span class="font-semibold">
+                {{ r.stats.total_con_horas_vcm }} / {{ r.stats.total_matriculados }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span>Matriculados sin horas VCM</span>
+              <span class="font-semibold text-amber-700">
+                {{ r.stats.total_sin_horas_vcm }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span>Horas promedio por alumno c/horas</span>
+              <span class="font-semibold">
+                {{
+                  r.stats.total_con_horas_vcm
+                    ? (r.stats.total_horas_vcm_aprobadas / r.stats.total_con_horas_vcm | number:'1.1-1')
+                    : 0
+                }} h
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="p-2 rounded-xl bg-indigo-100 text-indigo-700">
+              <i class="fa-solid fa-people-line text-sm"></i>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-slate-900">
+                Participación en eventos
+              </div>
+              <div class="text-xs text-slate-500">
+                EP-SEDE {{ r.ep_sede_id }}
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2 text-xs text-slate-700">
+            <div class="flex items-center justify-between">
+              <span>Alumnos con al menos un evento</span>
+              <span class="font-semibold">
+                {{ r.stats.alumnos_con_eventos }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span>Participaciones por evento (promedio)</span>
+              <span class="font-semibold">
+                {{
+                  r.stats.total_eventos
+                    ? (r.stats.participaciones_eventos / r.stats.total_eventos | number:'1.1-1')
+                    : 0
+                }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span>Eventos por alumno participante (promedio)</span>
+              <span class="font-semibold">
+                {{
+                  r.stats.alumnos_con_eventos
+                    ? (r.stats.participaciones_eventos / r.stats.alumnos_con_eventos | number:'1.1-1')
+                    : 0
+                }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+</div>
