@@ -1,46 +1,27 @@
-import { Inject, Injectable } from '@angular/core';
+// dashboard.api.ts
+
+import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_URL } from '../../../core/tokens/api-url.token';
-import {
-  DashboardFeedResponse,
-  InscribirEventoResponse,
-  InscribirProyectoResponse,
-} from '../models/dashboard.models';
+import { DashboardFeedResponse } from '../models/dashboard.models';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
-export class AlumnoDashboardApiService {
-  constructor(
-    private http: HttpClient,
-    @Inject(API_URL) private base: string,
-  ) {}
+export class DashboardApi {
+  // environment.apiUrl = 'https://apiproyecto-production-39fa.up.railway.app/api'
+  private readonly baseUrl = `${environment.apiUrl}/alumno`;
 
-  /**
-   * GET /api/alumno/feed?periodo_id=...
-   */
+  constructor(private http: HttpClient) {}
+
   getFeed(periodoId?: number): Observable<DashboardFeedResponse> {
     let params = new HttpParams();
-    if (periodoId) params = params.set('periodo_id', String(periodoId));
-    return this.http.get<DashboardFeedResponse>(`${this.base}/alumno/feed`, { params });
-  }
 
-  /**
-   * POST /api/vm/eventos/{evento}/inscribirse
-   */
-  inscribirEvento(eventoId: number): Observable<InscribirEventoResponse> {
-    return this.http.post<InscribirEventoResponse>(
-      `${this.base}/vm/eventos/${eventoId}/inscribirse`,
-      {},
-    );
-  }
+    if (periodoId != null) {
+      params = params.set('periodo_id', periodoId.toString());
+    }
 
-  /**
-   * POST /api/vm/proyectos/{proyecto}/inscribirse
-   */
-  inscribirProyecto(proyectoId: number): Observable<InscribirProyectoResponse> {
-    return this.http.post<InscribirProyectoResponse>(
-      `${this.base}/vm/proyectos/${proyectoId}/inscribirse`,
-      {},
-    );
+    return this.http.get<DashboardFeedResponse>(`${this.baseUrl}/feed`, {
+      params,
+    });
   }
 }

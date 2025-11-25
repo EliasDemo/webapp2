@@ -1,349 +1,261 @@
-<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 pb-16">
+<!-- dashboard.page.html -->
 
-  <!-- Header -->
-  <header class="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="p-2 rounded-xl bg-blue-100 text-blue-700">
-          <i class="fa-solid fa-gauge-high"></i>
+<!-- Loader -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border" role="status">
+    <span class="visually-hidden">Cargando...</span>
+  </div>
+</div>
+
+<!-- Error -->
+<div *ngIf="!loading && error" class="alert alert-danger mt-3">
+  {{ error }}
+</div>
+
+<!-- Contenido principal -->
+<div *ngIf="!loading && !error && data as d; else noData" class="dashboard">
+
+  <!-- Header / contexto -->
+  <section class="mb-4">
+    <h2 class="mb-1">Panel de actividades</h2>
+
+    <p class="text-muted mb-0">
+      Periodo:
+      <strong>{{ d.contexto.periodo.codigo }}</strong>
+
+      <span *ngIf="d.contexto.periodo.vigente" class="badge bg-success ms-2">
+        Vigente
+      </span>
+      <span *ngIf="!d.contexto.periodo.vigente" class="badge bg-secondary ms-2">
+        No vigente
+      </span>
+    </p>
+
+    <small class="text-muted">
+      Actualizado: {{ d.contexto.ahora }}
+    </small>
+  </section>
+
+  <!-- Contadores -->
+  <section class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <div class="small text-muted">Proyectos inscritos</div>
+          <div class="fs-3 fw-semibold">
+            {{ d.contadores.proyectos_inscritos }}
+          </div>
         </div>
-        <div>
-          <h1 class="text-2xl font-bold text-slate-900">Panel del Alumno</h1>
-
-          <p class="text-sm text-slate-600">
-            Periodo:
-            <span class="font-semibold text-blue-700">
-              {{ contexto().periodo.codigo }}
-            </span>
-            <span class="mx-1 text-slate-400">·</span>
-            {{ contexto().periodo.inicio }} – {{ contexto().periodo.fin }}
-
-            <span *ngIf="contexto().periodo.vigente"
-                  class="ml-2 inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-emerald-100 text-emerald-700">
-              <i class="fa-solid fa-circle-dot mr-1 text-[8px]"></i> Vigente
-            </span>
-          </p>
-        </div>
-      </div>
-
-      <div class="hidden md:flex text-xs text-slate-500 gap-2 items-center">
-        <i class="fa-regular fa-clock"></i>
-        <span>Actualizado: {{ contexto().ahora }}</span>
       </div>
     </div>
-  </header>
 
-  <main class="max-w-7xl mx-auto px-4 pt-8 space-y-8">
-
-    <!-- Error -->
-    <div *ngIf="error()" class="rounded-2xl border border-rose-200 bg-white p-4 shadow-sm">
-      <div class="flex items-start gap-3">
-        <div class="p-2 rounded-lg bg-rose-100 text-rose-600">
-          <i class="fa-solid fa-circle-exclamation text-sm"></i>
+    <div class="col-6 col-md-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <div class="small text-muted">Horas validadas</div>
+          <div class="fs-3 fw-semibold">
+            {{ d.contadores.horas_validadas_h | number: '1.0-2' }} h
+          </div>
+          <small class="text-muted">
+            ({{ d.contadores.horas_validadas_min }} min)
+          </small>
         </div>
-        <div class="text-sm text-rose-700">{{ error() }}</div>
       </div>
     </div>
 
-    <!-- Cards resumen -->
-    <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
-
-      <!-- Proyectos inscritos -->
-      <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm flex flex-col">
-        <div class="text-xs font-semibold text-slate-500 mb-1">Proyectos inscritos</div>
-        <div class="text-3xl font-black text-slate-900">
-          {{ contadores().proyectos_inscritos }}
-        </div>
-        <div class="mt-1 text-xs text-slate-500">
-          + {{ totalProyectosInscritos() }} visibles aquí
+    <div class="col-6 col-md-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <div class="small text-muted">Faltas en eventos</div>
+          <div class="fs-3 fw-semibold text-danger">
+            {{ d.contadores.faltas_eventos }}
+          </div>
         </div>
       </div>
+    </div>
 
-      <!-- Horas validadas -->
-      <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm flex flex-col">
-        <div class="text-xs font-semibold text-slate-500 mb-1">Horas validadas</div>
-        <div class="text-3xl font-black text-emerald-700">
-          {{ contadores().horas_validadas_h | number:'1.0-1' }} h
-        </div>
-        <div class="mt-1 text-xs text-slate-500">
-          {{ formatoHoras(contadores().horas_validadas_min) }}
+    <div class="col-6 col-md-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <div class="small text-muted">Faltas en proyectos</div>
+          <div class="fs-3 fw-semibold text-danger">
+            {{ d.contadores.faltas_proyectos }}
+          </div>
         </div>
       </div>
+    </div>
+  </section>
 
-      <!-- Faltas -->
-      <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm flex flex-col">
-        <div class="text-xs font-semibold text-slate-500 mb-1">Faltas totales</div>
-        <div class="text-3xl font-black text-rose-700">
-          {{ contadores().faltas_total }}
-        </div>
-        <div class="mt-1 text-xs text-slate-500">
-          {{ contadores().faltas_eventos }} en eventos ·
-          {{ contadores().faltas_proyectos }} en proyectos
-        </div>
-      </div>
+  <!-- Listas de eventos / proyectos -->
+  <div class="row g-4">
+
+    <!-- Eventos -->
+    <div class="col-lg-6">
 
       <!-- Eventos inscritos -->
-      <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm flex flex-col">
-        <div class="text-xs font-semibold text-slate-500 mb-1">Eventos inscritos</div>
-        <div class="text-3xl font-black text-blue-700">
-          {{ totalEventosInscritos() }}
-        </div>
-        <div class="mt-1 text-xs text-slate-500">
-          Próximos en tu agenda
-        </div>
-      </div>
+      <section>
+        <h3 class="h5 mb-3">Eventos inscritos</h3>
 
-    </section>
-
-    <!-- =============================== -->
-    <!--   GRID PRINCIPAL: PROYECTOS     -->
-    <!-- =============================== -->
-    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-
-      <!-- Columna proyectos -->
-      <div class="space-y-4">
-
-        <!-- Proyectos inscritos -->
-        <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-2">
-              <div class="p-2 rounded-lg bg-emerald-100 text-emerald-600">
-                <i class="fa-solid fa-hands-holding-child text-sm"></i>
-              </div>
-              <div>
-                <h2 class="text-base font-bold text-slate-900">Tus proyectos</h2>
-                <p class="text-xs text-slate-500">Proyectos en los que estás inscrito</p>
-              </div>
-            </div>
-            <span class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-600">
-              {{ proyectosInscritos().length }} activos
-            </span>
-          </div>
-
-          <div *ngIf="!proyectosInscritos().length" class="text-sm text-slate-500">
-            Aún no tienes proyectos activos en este período.
-          </div>
-
-          <div class="space-y-3">
-            <article *ngFor="let p of proyectosInscritos()"
-                     class="rounded-xl border border-slate-200 p-3 flex flex-col gap-2">
-
-              <div class="flex justify-between gap-3">
-                <div>
-                  <div class="text-xs text-slate-400 mb-0.5">
-                    {{ p.codigo || 'Proyecto' }}
-                  </div>
-
-                  <h3 class="text-sm font-semibold text-slate-900">{{ p.titulo }}</h3>
-
-                  <div class="mt-1 text-xs text-slate-500">
-                    Tipo: <span class="font-medium">{{ p.tipo }}</span>
-
-                    <span *ngIf="p.ciclos?.length" class="ml-2">
-                      Ciclos: {{ p.ciclos.join(', ') }}
-                    </span>
-                  </div>
-                </div>
-
-                <div *ngIf="p.progreso" class="text-right">
-                  <div class="text-xs text-slate-500 mb-1">Avance</div>
-                  <div class="text-lg font-bold text-emerald-700">
-                    {{ p.progreso.porcentaje }}%
-                  </div>
-                  <div class="text-[10px] text-slate-500">
-                    {{ formatoHoras(p.progreso.min_validados) }}
-                    /
-                    {{ formatoHoras(p.progreso.min_requeridos) }}
-                  </div>
-                </div>
+        <div *ngIf="eventosInscritos.length; else noEventosInscritos">
+          <div class="list-group small">
+            <a
+              *ngFor="let ev of eventosInscritos"
+              class="list-group-item list-group-item-action flex-column align-items-start"
+            >
+              <div class="d-flex w-100 justify-content-between">
+                <h4 class="h6 mb-1">{{ ev.titulo }}</h4>
+                <span class="badge bg-light text-muted">{{ ev.codigo }}</span>
               </div>
 
-            </article>
+              <p class="mb-1" *ngIf="ev.descripcion_corta">
+                {{ ev.descripcion_corta }}
+              </p>
+
+              <small class="text-muted">
+                {{ ev.sesiones?.[0]?.fecha }}
+                · {{ ev.modalidad || 'Presencial' }}
+                <span *ngIf="ev.progreso">
+                  · Progreso: {{ ev.progreso.porcentaje }}%
+                  ({{ ev.progreso.asistidas }}/{{ ev.progreso.totales }} sesiones)
+                </span>
+              </small>
+            </a>
           </div>
         </div>
 
-        <!-- Proyectos inscribibles -->
-        <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-2">
-              <div class="p-2 rounded-lg bg-sky-100 text-sky-600">
-                <i class="fa-solid fa-plus text-sm"></i>
+        <ng-template #noEventosInscritos>
+          <p class="text-muted small mb-0">
+            Aún no estás inscrito en ningún evento.
+          </p>
+        </ng-template>
+      </section>
+
+      <!-- Eventos inscribibles -->
+      <section class="mt-4">
+        <h3 class="h5 mb-3">Eventos disponibles para inscribirte</h3>
+
+        <div *ngIf="eventosInscribibles.length; else noEventosDisponibles">
+          <div class="list-group small">
+            <div
+              *ngFor="let ev of eventosInscribibles"
+              class="list-group-item flex-column align-items-start"
+            >
+              <div class="d-flex w-100 justify-content-between">
+                <h4 class="h6 mb-1">{{ ev.titulo }}</h4>
+                <span class="badge bg-primary-subtle text-primary">
+                  {{ ev.modalidad || 'Presencial' }}
+                </span>
               </div>
-              <div>
-                <h2 class="text-base font-bold text-slate-900">Proyectos disponibles</h2>
-                <p class="text-xs text-slate-500">Puedes inscribirte en estos proyectos</p>
-              </div>
+
+              <p class="mb-1" *ngIf="ev.descripcion_corta">
+                {{ ev.descripcion_corta }}
+              </p>
+
+              <small class="text-muted">
+                Inscripción:
+                <span *ngIf="ev.inscripcion_desde">
+                  desde {{ ev.inscripcion_desde }}
+                </span>
+                <span *ngIf="ev.inscripcion_hasta">
+                  · hasta {{ ev.inscripcion_hasta }}
+                </span>
+              </small>
             </div>
           </div>
-
-          <div *ngIf="!proyectosInscribibles().length" class="text-sm text-slate-500">
-            No hay proyectos disponibles para tu nivel y período.
-          </div>
-
-          <div class="space-y-3">
-            <article *ngFor="let p of proyectosInscribibles()"
-                     class="rounded-xl border border-slate-200 p-3 flex items-start justify-between gap-3">
-
-              <div>
-                <h3 class="text-sm font-semibold text-slate-900">{{ p.titulo }}</h3>
-
-                <div class="mt-1 flex flex-wrap gap-1.5 text-[11px]">
-                  <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                    {{ p.tipo }}
-                  </span>
-
-                  <span *ngIf="p.modalidad"
-                        class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                    {{ p.modalidad }}
-                  </span>
-
-                  <span *ngIf="p.ciclos?.length"
-                        class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
-                    Ciclos: {{ p.ciclos.join(', ') }}
-                  </span>
-                </div>
-              </div>
-
-              <button
-                class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
-                (click)="inscribirseProyecto(p)"
-                [disabled]="isInscribiendoProyecto(p.id) || loading()">
-                <i *ngIf="!isInscribiendoProyecto(p.id)" class="fa-solid fa-check"></i>
-                <i *ngIf="isInscribiendoProyecto(p.id)" class="fa-solid fa-circle-notch animate-spin"></i>
-                {{ isInscribiendoProyecto(p.id) ? 'Inscribiendo...' : 'Inscribirme' }}
-              </button>
-
-            </article>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- =============================== -->
-      <!--     COLUMNA EVENTOS            -->
-      <!-- =============================== -->
-      <div class="space-y-4">
-
-        <!-- Eventos inscritos -->
-        <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-2">
-              <div class="p-2 rounded-lg bg-indigo-100 text-indigo-600">
-                <i class="fa-solid fa-calendar-check text-sm"></i>
-              </div>
-              <div>
-                <h2 class="text-base font-bold text-slate-900">Tus eventos</h2>
-                <p class="text-xs text-slate-500">Eventos en los que estás inscrito</p>
-              </div>
-            </div>
-          </div>
-
-          <div *ngIf="!eventosInscritos().length" class="text-sm text-slate-500">
-            No tienes eventos inscritos por ahora.
-          </div>
-
-          <div class="space-y-3">
-            <article *ngFor="let e of eventosInscritos()"
-                     class="rounded-xl border border-slate-200 p-3 flex flex-col gap-2">
-
-              <div class="flex justify-between gap-3">
-
-                <div>
-                  <div class="text-xs text-slate-400 mb-0.5">{{ e.codigo || 'Evento' }}</div>
-
-                  <h3 class="text-sm font-semibold text-slate-900">{{ e.titulo }}</h3>
-
-                  <p class="text-xs text-slate-500" *ngIf="e.subtitulo">{{ e.subtitulo }}</p>
-
-                  <div class="mt-1 text-[11px] text-slate-500 flex flex-wrap gap-1.5">
-
-                    <span class="px-2 py-0.5 rounded-full bg-slate-100">
-                      {{ e.modalidad || 'Modalidad N/D' }}
-                    </span>
-
-                    <span *ngIf="e.progreso"
-                          class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
-                      {{ e.progreso.asistidas }}/{{ e.progreso.totales }} asistencias
-                    </span>
-
-                  </div>
-                </div>
-
-              </div>
-
-            </article>
-          </div>
-
         </div>
 
-        <!-- Eventos inscribibles -->
-        <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
-
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-2">
-              <div class="p-2 rounded-lg bg-orange-100 text-orange-600">
-                <i class="fa-solid fa-bullhorn text-sm"></i>
-              </div>
-              <div>
-                <h2 class="text-base font-bold text-slate-900">Eventos recomendados</h2>
-                <p class="text-xs text-slate-500">Abiertos para inscripción en tu EP-SEDE</p>
-              </div>
-            </div>
-          </div>
-
-          <div *ngIf="!eventosInscribibles().length" class="text-sm text-slate-500">
-            No hay eventos inscribibles en este momento.
-          </div>
-
-          <div class="space-y-3">
-
-            <article *ngFor="let e of eventosInscribibles()"
-                     class="rounded-xl border border-slate-200 p-3 flex items-start justify-between gap-3">
-
-              <div>
-                <h3 class="text-sm font-semibold text-slate-900">{{ e.titulo }}</h3>
-
-                <div class="mt-1 text-xs text-slate-500">
-                  Inscripciones:
-                  <span *ngIf="e.inscripcion_desde">{{ e.inscripcion_desde }}</span>
-                  <span *ngIf="e.inscripcion_hasta"> – {{ e.inscripcion_hasta }}</span>
-                </div>
-              </div>
-
-              <button
-                class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-                (click)="inscribirseEvento(e)"
-                [disabled]="isInscribiendoEvento(e.id) || loading() || !e.requiere_inscripcion">
-
-                <i *ngIf="!isInscribiendoEvento(e.id)" class="fa-solid fa-check"></i>
-
-                <i *ngIf="isInscribiendoEvento(e.id)" class="fa-solid fa-circle-notch animate-spin"></i>
-
-                {{ isInscribiendoEvento(e.id) ? 'Inscribiendo...' : 'Inscribirme' }}
-              </button>
-
-            </article>
-
-          </div>
-
-        </div>
-      </div>
-
-    </section>
-
-    <!-- Loader global -->
-    <div *ngIf="loading()" class="fixed inset-0 bg-white/70 backdrop-blur-sm z-50 grid place-items-center">
-      <div class="text-center">
-        <div class="relative">
-          <div class="w-14 h-14 rounded-full border-4 border-slate-200"></div>
-          <div class="absolute inset-0 w-14 h-14 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-        </div>
-        <div class="mt-3 text-sm font-semibold text-slate-800">
-          Cargando dashboard...
-        </div>
-      </div>
+        <ng-template #noEventosDisponibles>
+          <p class="text-muted small mb-0">
+            No hay eventos disponibles para inscribirte en este periodo.
+          </p>
+        </ng-template>
+      </section>
     </div>
 
-  </main>
+    <!-- Proyectos -->
+    <div class="col-lg-6">
 
+      <!-- Proyectos inscritos -->
+      <section>
+        <h3 class="h5 mb-3">Proyectos inscritos</h3>
+
+        <div *ngIf="proyectosInscritos.length; else noProyectosInscritos">
+          <div class="list-group small">
+            <a
+              *ngFor="let p of proyectosInscritos"
+              class="list-group-item list-group-item-action flex-column align-items-start"
+            >
+              <div class="d-flex w-100 justify-content-between">
+                <h4 class="h6 mb-1">{{ p.titulo }}</h4>
+                <span class="badge bg-light text-muted">{{ p.codigo }}</span>
+              </div>
+
+              <p class="mb-1" *ngIf="p.descripcion">
+                {{ p.descripcion }}
+              </p>
+
+              <small class="text-muted">
+                Tipo: {{ p.tipo }}
+                · Modalidad: {{ p.modalidad || 'Presencial' }}
+                · Progreso: {{ p.progreso?.porcentaje ?? 0 }}%
+              </small>
+            </a>
+          </div>
+        </div>
+
+        <ng-template #noProyectosInscritos>
+          <p class="text-muted small mb-0">
+            Aún no estás inscrito en ningún proyecto.
+          </p>
+        </ng-template>
+      </section>
+
+      <!-- Proyectos inscribibles -->
+      <section class="mt-4">
+        <h3 class="h5 mb-3">Proyectos disponibles</h3>
+
+        <div *ngIf="proyectosInscribibles.length; else noProyectosDisponibles">
+          <div class="list-group small">
+            <div
+              *ngFor="let p of proyectosInscribibles"
+              class="list-group-item flex-column align-items-start"
+            >
+              <div class="d-flex w-100 justify-content-between">
+                <h4 class="h6 mb-1">{{ p.titulo }}</h4>
+                <span class="badge bg-info-subtle text-info">
+                  Nivel:
+                  <ng-container *ngIf="p.ciclos?.length; else sinNivel">
+                    {{ p.ciclos.join(', ') }}
+                  </ng-container>
+                  <ng-template #sinNivel>N/D</ng-template>
+                </span>
+              </div>
+
+              <p class="mb-1" *ngIf="p.descripcion">
+                {{ p.descripcion }}
+              </p>
+
+              <small class="text-muted">
+                Tipo: {{ p.tipo }}
+                · Modalidad: {{ p.modalidad || 'Presencial' }}
+              </small>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noProyectosDisponibles>
+          <p class="text-muted small mb-0">
+            No hay proyectos disponibles para inscribirte en este periodo.
+          </p>
+        </ng-template>
+      </section>
+    </div>
+  </div>
 </div>
+
+<!-- Fallback si no hay data -->
+<ng-template #noData>
+  <p class="text-muted">
+    No se encontraron datos para el dashboard.
+  </p>
+</ng-template>

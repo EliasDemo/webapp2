@@ -1,18 +1,43 @@
-import type { Id } from '../../matriculas/models/m.models';
+// dashboard.models.ts
 
-// ---------- Respuesta feed ----------
-export interface DashboardContexto {
-  expediente_id: Id;
-  ep_sede_id: Id;
-  periodo: {
-    id: Id;
-    codigo: string | number;
-    inicio: string; // YYYY-MM-DD
-    fin: string;    // YYYY-MM-DD
-    vigente: boolean;
-  };
-  ahora: string;    // 'YYYY-MM-DD HH:mm:ss'
+// Respuesta completa del backend para /alumno/feed
+export interface DashboardFeedResponse {
+  ok: boolean;
+  data: DashboardData;
 }
+
+// Nodo principal "data"
+export interface DashboardData {
+  contexto: DashboardContexto;
+  contadores: DashboardContadores;
+  eventos: {
+    inscritos: VmEvento[];
+    inscribibles: VmEvento[];
+  };
+  proyectos: {
+    inscritos: VmProyecto[];
+    inscribibles: VmProyecto[];
+  };
+}
+
+// ───────────────── contexto ─────────────────
+
+export interface DashboardContexto {
+  expediente_id: number;
+  ep_sede_id: number;
+  periodo: DashboardPeriodo;
+  ahora: string; // "YYYY-MM-DD HH:mm:ss"
+}
+
+export interface DashboardPeriodo {
+  id: number;
+  codigo: string | number;
+  inicio: string;
+  fin: string;
+  vigente: boolean;
+}
+
+// ───────────────── contadores ─────────────────
 
 export interface DashboardContadores {
   proyectos_inscritos: number;
@@ -23,149 +48,122 @@ export interface DashboardContadores {
   faltas_proyectos: number;
 }
 
-// ------- Eventos -------
-export interface VmSesionRef {
-  id: Id;
-  fecha: string;       // YYYY-MM-DD
-  hora_inicio: string; // HH:mm:ss
-  hora_fin: string;    // HH:mm:ss
-  estado: string;
-}
+// ───────────────── eventos ─────────────────
 
-export interface VmImagenRef {
-  id: Id;
+export interface VmEventoImagen {
+  id: number;
   url: string;
   path: string | null;
   titulo: string | null;
 }
 
-export interface EventoDashboard {
-  id: Id;
-  codigo: string | null;
+export interface VmSesion {
+  id: number;
+  fecha: string;       // "YYYY-MM-DD"
+  hora_inicio: string; // "HH:MM:SS"
+  hora_fin: string;    // "HH:MM:SS"
+  estado: string;
+}
+
+export interface VmEventoProgreso {
+  asistidas: number;
+  totales: number;
+  porcentaje: number;
+}
+
+export interface VmEventoVentana {
+  desde: string | null;
+  hasta: string | null;
+}
+
+export interface VmEventoParticipacion {
+  estado: string;
+}
+
+export interface VmEvento {
+  id: number;
+  codigo: string;
   titulo: string;
-  subtitulo?: string | null;
+  subtitulo: string | null;
   estado: string;
   modalidad: string | null;
-  periodo_id: Id;
+  periodo_id: number;
   requiere_inscripcion: boolean;
   cupo_maximo: number | null;
-  descripcion_corta?: string | null;
-  descripcion_larga?: string | null;
-  lugar_detallado?: string | null;
-  url_imagen_portada?: string | null;
-  url_enlace_virtual?: string | null;
-  inscripcion_desde?: string | null;
-  inscripcion_hasta?: string | null;
-  imagenes: VmImagenRef[];
-  sesiones: VmSesionRef[];
 
-  // Solo para inscritos:
-  progreso?: {
-    asistidas: number;
-    totales: number;
-    porcentaje: number;
-  } | null;
+  descripcion_corta: string | null;
+  descripcion_larga: string | null;
+  lugar_detallado: string | null;
+  url_imagen_portada: string | null;
+  url_enlace_virtual: string | null;
+  inscripcion_desde: string | null;
+  inscripcion_hasta: string | null;
 
-  participacion?: {
-    estado: string;
-  } | null;
+  imagenes: VmEventoImagen[];
+  sesiones: VmSesion[];
+
+  // En inscritos viene; en inscribibles no
+  progreso?: VmEventoProgreso;
+  participacion?: VmEventoParticipacion | null;
+
+  // En inscribibles viene esta ventana
+  ventana?: VmEventoVentana;
 }
 
-// ------- Proyectos -------
-export interface ProyectoProcesoSesionRef extends VmSesionRef {}
+// ───────────────── proyectos ─────────────────
 
-export interface ProyectoProcesoRef {
-  id: Id;
-  nombre: string;
-  descripcion?: string | null;
-  tipo?: string | null;
-  nota_minima?: number | null;
+export interface VmProyectoImagen {
+  id: number;
+  url: string;
+  path: string | null;
+  titulo: string | null;
+}
+
+export interface VmSesionProceso {
+  id: number;
+  fecha: string;
+  hora_inicio: string;
+  hora_fin: string;
   estado: string;
-  sesiones: ProyectoProcesoSesionRef[];
 }
 
-export interface ProyectoDashboard {
-  id: Id;
-  codigo: string | null;
+export interface VmProceso {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  tipo: string | null; // tipo_registro
+  nota_minima: number | null;
+  estado: string;
+  sesiones: VmSesionProceso[];
+}
+
+export interface VmProyectoProgreso {
+  min_validados: number;
+  min_requeridos: number;
+  porcentaje: number;
+}
+
+export interface VmProyectoParticipacion {
+  estado: string;
+}
+
+export interface VmProyecto {
+  id: number;
+  codigo: string;
   titulo: string;
   estado: string;
-  tipo: string;        // LIBRE / VINCULADO / PROYECTO
+  tipo: string;
   modalidad: string | null;
-  periodo_id: Id;
-  descripcion?: string | null;
-  imagenes: VmImagenRef[];
-  ciclos: number[];    // niveles/ciclos
-  procesos: ProyectoProcesoRef[];
+  periodo_id: number;
+  descripcion: string | null;
 
-  progreso?: {
-    min_validados: number;
-    min_requeridos: number;
-    porcentaje: number;
-  } | null;
+  imagenes: VmProyectoImagen[];
+  ciclos: number[];
 
-  participacion?: {
-    estado: string;
-  } | null;
+  // En inscritos vienen procesos; en inscribibles es []
+  procesos: VmProceso[];
+
+  // En inscritos objeto; en inscribibles null
+  progreso: VmProyectoProgreso | null;
+  participacion: VmProyectoParticipacion | null;
 }
-
-export interface DashboardData {
-  contexto: DashboardContexto;
-  contadores: DashboardContadores;
-  eventos: {
-    inscritos: EventoDashboard[];
-    inscribibles: EventoDashboard[];
-  };
-  proyectos: {
-    inscritos: ProyectoDashboard[];
-    inscribibles: ProyectoDashboard[];
-  };
-}
-
-export type DashboardFeedOk = { ok: true; data: DashboardData };
-export type DashboardFeedFail = { ok: false; message?: string };
-export type DashboardFeedResponse = DashboardFeedOk | DashboardFeedFail;
-
-// ---------- Respuestas de inscripción ----------
-export interface InscribirEventoOk {
-  ok: true;
-  code: 'ENROLLED';
-  data: {
-    participacion: any;
-    evento: {
-      id: Id;
-      requiere_inscripcion: boolean;
-      cupo_maximo: number | null;
-    };
-  };
-}
-
-export type InscribirEventoFail = {
-  ok: false;
-  code: string;
-  message: string;
-  meta?: any;
-};
-
-export type InscribirEventoResponse = InscribirEventoOk | InscribirEventoFail;
-
-export interface InscribirProyectoOk {
-  ok: true;
-  code: 'ENROLLED';
-  data: {
-    participacion: any;
-    proyecto: {
-      id: Id;
-      tipo: 'LIBRE' | 'VINCULADO' | string;
-      nivel: number | null;
-    };
-  };
-}
-
-export type InscribirProyectoFail = {
-  ok: false;
-  code: string;
-  message: string;
-  meta?: any;
-};
-
-export type InscribirProyectoResponse = InscribirProyectoOk | InscribirProyectoFail;
