@@ -4,6 +4,8 @@ import { RouterModule } from '@angular/router';
 
 import {
   DashboardData,
+  DashboardContexto,
+  DashboardContadores,
   EventoDashboard,
   ProyectoDashboard,
   VmSesionRef,
@@ -32,7 +34,7 @@ export class AlumnoDashboardPage {
   // DERIVADOS (SIEMPRE NO-NULL)
   // ===============================
 
-  contexto = computed(() => {
+  contexto = computed<DashboardContexto>(() => {
     return this.data()?.contexto ?? {
       expediente_id: 0,
       ep_sede_id: 0,
@@ -47,7 +49,7 @@ export class AlumnoDashboardPage {
     };
   });
 
-  contadores = computed(() => {
+  contadores = computed<DashboardContadores>(() => {
     return this.data()?.contadores ?? {
       proyectos_inscritos: 0,
       horas_validadas_min: 0,
@@ -103,7 +105,9 @@ export class AlumnoDashboardPage {
         }
       },
       error: (err) => {
-        this.error.set(err?.error?.message || 'Error de red al cargar dashboard.');
+        this.error.set(
+          err?.error?.message || 'Error de red al cargar dashboard.',
+        );
       },
       complete: () => {
         this.loading.set(false);
@@ -131,7 +135,9 @@ export class AlumnoDashboardPage {
         }
       },
       error: (err) => {
-        this.error.set(err?.error?.message || 'Error de red al inscribir en evento.');
+        this.error.set(
+          err?.error?.message || 'Error de red al inscribir en evento.',
+        );
         this.inscribiendoEventoId.set(null);
       },
     });
@@ -146,11 +152,15 @@ export class AlumnoDashboardPage {
         if (res.ok) {
           this.loadFeed(this.contexto().periodo.id);
         } else {
-          this.error.set(res.message || 'No se pudo inscribir en el proyecto.');
+          this.error.set(
+            res.message || 'No se pudo inscribir en el proyecto.',
+          );
         }
       },
       error: (err) => {
-        this.error.set(err?.error?.message || 'Error de red al inscribir en proyecto.');
+        this.error.set(
+          err?.error?.message || 'Error de red al inscribir en proyecto.',
+        );
         this.inscribiendoProyectoId.set(null);
       },
     });
@@ -169,12 +179,13 @@ export class AlumnoDashboardPage {
     return `${h} h ${mm} min`;
   }
 
+  // Por ejemplo, siguiente sesión de un evento:
   siguienteSesion(e: EventoDashboard): VmSesionRef | null {
     const hoy = new Date().toISOString().slice(0, 10);
-    const futuras = (e.sesiones || []).filter(s => s.fecha >= hoy);
+    const futuras = (e.sesiones || []).filter((s) => s.fecha >= hoy);
     return (
       futuras.sort((a, b) =>
-        (a.fecha + a.hora_inicio).localeCompare(b.fecha + b.hora_inicio)
+        (a.fecha + a.hora_inicio).localeCompare(b.fecha + b.hora_inicio),
       )[0] ?? null
     );
   }

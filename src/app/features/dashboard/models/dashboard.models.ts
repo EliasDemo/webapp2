@@ -1,5 +1,4 @@
-// dashboard.models.ts
-import type { Id } from '../../matriculas/models/m.models'; // o define tu propio Id = number
+import type { Id } from '../../matriculas/models/m.models';
 
 // ---------- Respuesta feed ----------
 export interface DashboardContexto {
@@ -59,12 +58,14 @@ export interface EventoDashboard {
   inscripcion_hasta?: string | null;
   imagenes: VmImagenRef[];
   sesiones: VmSesionRef[];
+
   // Solo para inscritos:
   progreso?: {
     asistidas: number;
     totales: number;
     porcentaje: number;
   } | null;
+
   participacion?: {
     estado: string;
   } | null;
@@ -95,11 +96,13 @@ export interface ProyectoDashboard {
   imagenes: VmImagenRef[];
   ciclos: number[];    // niveles/ciclos
   procesos: ProyectoProcesoRef[];
+
   progreso?: {
     min_validados: number;
     min_requeridos: number;
     porcentaje: number;
   } | null;
+
   participacion?: {
     estado: string;
   } | null;
@@ -135,7 +138,14 @@ export interface InscribirEventoOk {
     };
   };
 }
-export type InscribirEventoFail = { ok: false; code: string; message: string; meta?: any };
+
+export type InscribirEventoFail = {
+  ok: false;
+  code: string;
+  message: string;
+  meta?: any;
+};
+
 export type InscribirEventoResponse = InscribirEventoOk | InscribirEventoFail;
 
 export interface InscribirProyectoOk {
@@ -150,5 +160,12 @@ export interface InscribirProyectoOk {
     };
   };
 }
-export type InscribirProyectoFail = { ok: false; code: string; message: string; meta?: any };
+
+export type InscribirProyectoFail = {
+  ok: false;
+  code: string;
+  message: string;
+  meta?: any;
+};
+
 export type InscribirProyectoResponse = InscribirProyectoOk | InscribirProyectoFail;

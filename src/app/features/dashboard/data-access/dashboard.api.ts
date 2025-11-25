@@ -1,4 +1,3 @@
-// dashboard.api.ts
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -7,7 +6,6 @@ import {
   DashboardFeedResponse,
   InscribirEventoResponse,
   InscribirProyectoResponse,
-  // Id si lo reexportas
 } from '../models/dashboard.models';
 
 @Injectable({ providedIn: 'root' })
