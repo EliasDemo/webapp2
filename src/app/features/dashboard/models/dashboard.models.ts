@@ -1,5 +1,3 @@
-// dashboard.models.ts
-
 // Respuesta completa del backend para /alumno/feed
 export interface DashboardFeedResponse {
   ok: boolean;
@@ -55,6 +53,9 @@ export interface VmEventoImagen {
   url: string;
   path: string | null;
   titulo: string | null;
+  // extras que vienen en los endpoints FULL
+  disk?: string | null;
+  visibilidad?: string | null;
 }
 
 export interface VmSesion {
@@ -117,6 +118,9 @@ export interface VmProyectoImagen {
   url: string;
   path: string | null;
   titulo: string | null;
+  // extras que vienen en los endpoints FULL
+  disk?: string | null;
+  visibilidad?: string | null;
 }
 
 export interface VmSesionProceso {
@@ -166,4 +170,96 @@ export interface VmProyecto {
   // En inscritos objeto; en inscribibles null
   progreso: VmProyectoProgreso | null;
   participacion: VmProyectoParticipacion | null;
+}
+
+// ───────────────── FULL: EVENTOS ─────────────────
+
+export interface VmEventoPeriodo {
+  id: number;
+  codigo: string | number | null;
+  anio: number | null;
+  ciclo: number | null;
+}
+
+export interface VmEventoCategoria {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+}
+
+export interface VmEventoFull {
+  id: number;
+  codigo: string;
+  titulo: string;
+  subtitulo: string | null;
+  estado: string;
+  modalidad: string | null;
+
+  descripcion_corta: string | null;
+  descripcion_larga: string | null;
+  lugar_detallado: string | null;
+  url_imagen_portada: string | null;
+  url_enlace_virtual: string | null;
+
+  requiere_inscripcion: boolean;
+  cupo_maximo: number | null;
+  inscripcion_desde: string | null;
+  inscripcion_hasta: string | null;
+
+  periodo: VmEventoPeriodo | null;
+  categoria: VmEventoCategoria | null;
+
+  sesiones: VmSesion[];
+  imagenes: VmEventoImagen[];
+}
+
+// ───────────────── FULL: PROYECTOS ─────────────────
+
+export interface VmProyectoCicloFull {
+  id: number;
+  nivel: number;
+  ep_sede_id: number;
+  periodo_id: number;
+}
+
+export interface VmProcesoFull {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  tipo_registro: string | null;
+  horas_asignadas: number | null;
+  nota_minima: number | null;
+  requiere_asistencia: boolean;
+  estado: string;
+  orden: number | null;
+  sesiones: VmSesionProceso[];
+}
+
+export interface VmProyectoFull {
+  id: number;
+  codigo: string;
+  titulo: string;
+  descripcion: string | null;
+  tipo: string;
+  modalidad: string | null;
+  estado: string;
+
+  horas_planificadas: number;
+  horas_minimas_participante: number | null;
+
+  ciclos: VmProyectoCicloFull[];
+  procesos: VmProcesoFull[];
+  imagenes: VmProyectoImagen[];
+}
+
+// ───────────────── Respuestas de los endpoints FULL ─────────────────
+
+export interface VmEventosFullResponse {
+  ok: boolean;
+  data: VmEventoFull[];
+}
+
+export interface VmProyectosFullResponse {
+  ok: boolean;
+  data: VmProyectoFull[];
 }
