@@ -248,7 +248,9 @@ export type MetodoAsistencia =
   | 'MANUAL'
   | 'MANUAL_JUSTIFICADA'
   | 'IMPORTADO'
-  | 'AJUSTE';
+  | 'AJUSTE'
+  | 'EVALUACION';
+
 
 export type EstadoAsistencia  = 'PENDIENTE' | 'VALIDADO' | 'ANULADO' | string;
 
@@ -267,6 +269,23 @@ export interface ListadoAsistenciaRow {
 }
 
 export interface ValidarAsistenciasResp { validadas: number; minutos_por_asistencia: number; registro_horas_creado: boolean; }
+
+/** ✅ NEW: resultado de calificar una evaluación (EVALUACION / MIXTO) */
+export interface CalificarEvaluacionResult {
+  nota: number;
+  aprobado: boolean;
+  abonados_min?: number;
+  faltaban_min?: number;
+  faltan_despues_min?: number;
+  proyecto_id?: Id;
+  expediente_id?: Id;
+  sesion_id?: Id;
+  asistencia_id?: Id | null;
+}
+
+/** ✅ NEW: respuesta estándar del API para calificar */
+export type CalificarEvaluacionResponse = ApiResponse<CalificarEvaluacionResult>;
+
 
 // Agenda
 export type AlumnoSesionEstado = 'PROXIMA' | 'ACTUAL' | 'PASADA';

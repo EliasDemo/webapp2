@@ -113,13 +113,8 @@ export class AIResumenPage {
     });
   }
 
-  // Helpers UI
   usarEpSede(id: Id): void {
     this.epSedeId.set(id);
     this.error.set(null);
-  }
-
-  chipBadgeClass(): string {
-    return 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold';
   }
 }

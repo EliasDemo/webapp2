@@ -218,7 +218,7 @@ export class UpcomingSessionsPage implements OnInit, AfterViewInit, OnDestroy {
       const pid = this.normalizedPeriodoId();
       const pageNum = this.page();
 
-      // ----------- Proyectos -----------
+      // ----------- Proyectos -----------`
       const projParams: any = { page: pageNum, per_page: this.pageSize };
       if (typeof pid === 'number') projParams.periodo_id = pid;
 
@@ -521,6 +521,37 @@ export class UpcomingSessionsPage implements OnInit, AfterViewInit, OnDestroy {
       this.selectedPeriodoId.set(id);
     }
     this.fetch();
+  }
+
+  // ===== Helpers para EVALUACION / MIXTO =====
+  private procesoTipo(card: FlatCard): string | null {
+    if (card.kind !== 'PROYECTO' || !card.proceso) return null;
+    const t = (card.proceso as any).tipo_registro;
+    return t ? String(t).toUpperCase() : null;
+  }
+
+  isProcesoEvaluable(card: FlatCard): boolean {
+    const t = this.procesoTipo(card);
+    return t === 'EVALUACION' || t === 'MIXTO';
+  }
+
+  isSoloEvaluacion(card: FlatCard): boolean {
+    const t = this.procesoTipo(card);
+    return t === 'EVALUACION';
+  }
+
+  isMixto(card: FlatCard): boolean {
+    const t = this.procesoTipo(card);
+    return t === 'MIXTO';
+  }
+
+  calificarRouterLink(card: FlatCard): any[] {
+    if (card.kind !== 'PROYECTO' || !card.proceso) {
+      return ['/vm'];
+    }
+    const procesoId = (card.proceso as any).id ?? 0;
+    const sesionId = (card.sesion as any).id ?? 0;
+    return ['/vm', 'procesos', procesoId, 'sesiones', sesionId, 'calificar'];
   }
 
   // Helpers para el template

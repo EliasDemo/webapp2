@@ -1,0 +1,94 @@
+<!-- ✅ FILE: src/app/vm/pages/proyecto-evaluacion/proyecto-evaluacion.page.html -->
+<div class="min-h-screen bg-slate-50 py-6">
+  <div class="max-w-6xl mx-auto px-4">
+
+    <div class="mb-5 flex items-center gap-3">
+      <h1 class="text-xl font-semibold text-slate-900">Calificación de sesión</h1>
+      <span class="ml-auto text-xs text-slate-500">
+        Ahora: {{ now() | date:'shortTime' }}
+      </span>
+    </div>
+
+    <ng-container *ngIf="error()">
+      <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+        {{ error() }}
+      </div>
+    </ng-container>
+
+    <section class="rounded-xl border bg-white shadow-sm p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold text-slate-700">
+          Participantes inscritos (proceso evaluable)
+        </h2>
+        <div class="flex gap-2">
+          <button class="px-3 py-1.5 rounded border text-xs" (click)="loadParticipantes()">
+            Recargar
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="participantes().length; else sinParticipantes" class="overflow-x-auto">
+        <table class="min-w-full text-sm table-fixed">
+          <thead class="text-xs text-slate-500">
+            <tr>
+              <th class="text-left px-2 py-1 w-24">Código</th>
+              <th class="text-left px-2 py-1 w-24">DNI</th>
+              <th class="text-left px-2 py-1">Nombres</th>
+              <th class="text-left px-2 py-1">Apellidos</th>
+              <th class="text-left px-2 py-1 w-24">Nota</th>
+              <th class="text-left px-2 py-1 w-32">Estado</th>
+              <th class="text-left px-2 py-1 w-40">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of participantes(); trackBy: trackByParticipante" class="border-t">
+              <td class="px-2 py-1 whitespace-nowrap">{{ p.codigo || '—' }}</td>
+              <td class="px-2 py-1 whitespace-nowrap">{{ p.dni || '—' }}</td>
+              <td class="px-2 py-1 whitespace-nowrap">{{ p.nombres || '—' }}</td>
+              <td class="px-2 py-1 whitespace-nowrap">{{ p.apellidos || '—' }}</td>
+              <td class="px-2 py-1 whitespace-nowrap">
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  class="w-20 border rounded px-2 py-1 text-xs"
+                  [(ngModel)]="p.nota"
+                  [ngModelOptions]="{ standalone: true }"
+                />
+              </td>
+              <td class="px-2 py-1 whitespace-nowrap">
+                <ng-container [ngSwitch]="p.estado_calculado">
+                  <span *ngSwitchCase="'PRESENTE'"
+                        class="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-[11px]">
+                    APROBADO / CON HORAS
+                  </span>
+                  <span *ngSwitchCase="'FALTA'"
+                        class="text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded text-[11px]">
+                    SIN HORAS
+                  </span>
+                  <span *ngSwitchDefault class="text-slate-500 text-[11px]">—</span>
+                </ng-container>
+                <div *ngIf="p.error" class="text-[10px] text-rose-600 mt-1">
+                  {{ p.error }}
+                </div>
+              </td>
+              <td class="px-2 py-1 whitespace-nowrap">
+                <button
+                  class="px-3 py-1.5 rounded border border-violet-300 bg-violet-50 hover:bg-violet-100 text-xs disabled:opacity-50"
+                  [disabled]="p.loading"
+                  (click)="calificarUno(p)"
+                >
+                  {{ p.loading ? 'Guardando…' : 'Calificar' }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #sinParticipantes>
+        <div class="text-xs text-slate-500">No hay participantes inscritos en esta sesión.</div>
+      </ng-template>
+    </section>
+  </div>
+</div>

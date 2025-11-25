@@ -1,7 +1,6 @@
 <!-- src/app/features/alumnoinspector/pages/resumen/ai-resumen.page.html -->
 <div class="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50/40 pb-16">
 
-  <!-- Header -->
   <header class="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
     <div class="max-w-7xl mx-auto px-4 py-4">
       <div class="flex items-center justify-between gap-4">
@@ -104,9 +103,6 @@
               {{ p.anio }}-{{ p.ciclo }} {{ (p.estado||'')==='EN_CURSO' ? '• En curso' : '' }}
             </option>
           </select>
-          <p class="text-[11px] text-slate-500">
-            Se recomienda usar el período actual <span class="font-semibold">EN_CURSO</span>.
-          </p>
         </div>
 
         <!-- EP-SEDE -->
@@ -119,10 +115,7 @@
             class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             [ngModel]="epSedeId() ?? ''"
             (ngModelChange)="epSedeId.set($event ? +$event : null)"
-            placeholder="Si gestionas varias sedes, puedes forzar una aquí" />
-          <p class="text-[11px] text-slate-500">
-            Si lo dejas vacío, el backend intentará resolverlo por tus permisos.
-          </p>
+            placeholder="Si gestionas varias sedes, puedes fijar una" />
         </div>
 
         <!-- Botón -->
@@ -141,9 +134,8 @@
 
     <!-- Resumen principal -->
     <section *ngIf="resumen() as r" class="space-y-6">
-
-      <!-- Cards principales -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Estudiantes -->
         <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div class="flex items-center justify-between">
             <div>
@@ -164,6 +156,7 @@
           </div>
         </div>
 
+        <!-- Horas VCM -->
         <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
           <div class="flex items-center justify-between">
             <div>
@@ -184,6 +177,7 @@
           </div>
         </div>
 
+        <!-- Eventos -->
         <div class="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm">
           <div class="flex items-center justify-between">
             <div>
@@ -205,97 +199,17 @@
           </div>
         </div>
       </div>
-
-      <!-- Detalle secundario -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="p-2 rounded-xl bg-slate-100 text-slate-600">
-              <i class="fa-solid fa-graduation-cap text-sm"></i>
-            </div>
-            <div>
-              <div class="text-sm font-semibold text-slate-900">
-                Situación académica
-              </div>
-              <div class="text-xs text-slate-500">
-                Período {{ r.periodo.codigo }} · Estado {{ r.periodo.estado || '—' }}
-              </div>
-            </div>
-          </div>
-
-          <div class="space-y-2 text-xs text-slate-700">
-            <div class="flex items-center justify-between">
-              <span>Matriculados con horas VCM</span>
-              <span class="font-semibold">
-                {{ r.stats.total_con_horas_vcm }} / {{ r.stats.total_matriculados }}
-              </span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span>Matriculados sin horas VCM</span>
-              <span class="font-semibold text-amber-700">
-                {{ r.stats.total_sin_horas_vcm }}
-              </span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span>Horas promedio por alumno c/horas</span>
-              <span class="font-semibold">
-                {{
-                  r.stats.total_con_horas_vcm
-                    ? (r.stats.total_horas_vcm_aprobadas / r.stats.total_con_horas_vcm | number:'1.1-1')
-                    : 0
-                }} h
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="p-2 rounded-xl bg-indigo-100 text-indigo-700">
-              <i class="fa-solid fa-people-line text-sm"></i>
-            </div>
-            <div>
-              <div class="text-sm font-semibold text-slate-900">
-                Participación en eventos
-              </div>
-              <div class="text-xs text-slate-500">
-                EP-SEDE {{ r.ep_sede_id }}
-              </div>
-            </div>
-          </div>
-
-          <div class="space-y-2 text-xs text-slate-700">
-            <div class="flex items-center justify-between">
-              <span>Alumnos con al menos un evento</span>
-              <span class="font-semibold">
-                {{ r.stats.alumnos_con_eventos }}
-              </span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span>Participaciones por evento (promedio)</span>
-              <span class="font-semibold">
-                {{
-                  r.stats.total_eventos
-                    ? (r.stats.participaciones_eventos / r.stats.total_eventos | number:'1.1-1')
-                    : 0
-                }}
-              </span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span>Eventos por alumno participante (promedio)</span>
-              <span class="font-semibold">
-                {{
-                  r.stats.alumnos_con_eventos
-                    ? (r.stats.participaciones_eventos / r.stats.alumnos_con_eventos | number:'1.1-1')
-                    : 0
-                }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </section>
+
+    <div *ngIf="loading()" class="fixed inset-0 bg-white/70 backdrop-blur-sm z-50 grid place-items-center">
+      <div class="text-center">
+        <div class="relative mx-auto">
+          <div class="w-14 h-14 rounded-full border-4 border-slate-200"></div>
+          <div class="absolute inset-0 w-14 h-14 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+        </div>
+        <div class="mt-3 text-sm font-semibold text-slate-900">Procesando...</div>
+      </div>
+    </div>
 
   </main>
 </div>

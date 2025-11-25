@@ -13,7 +13,7 @@ export interface ApiFail {
   errors?: FieldErrors;
   error?: string;
   meta?: any;
-  choices?: Id[]; // cuando el backend devuelve EP-SEDEs gestionadas
+  choices?: Id[]; // EP-SEDEs sugeridas
 }
 
 /* ====================== RESUMEN EP-SEDE ====================== */
@@ -93,7 +93,7 @@ export interface AIVcmProyecto {
   codigo: string | null;
   titulo: string | null;
   tipo: string | null;
-  horas: number; // horas en ese proyecto
+  horas: number;
 }
 
 export interface AIVcmPeriodo {
@@ -299,7 +299,31 @@ export interface AIInscribirEventoPayload {
   expediente_id?: Id | null;
   codigo?: string | null;
 }
+/* ====================== PROYECTO · SESIONES ALUMNO ====================== */
 
-export interface AIUpdateEventoParticipacionPayload {
-  estado: string;
+export interface AISesionProyectoAlumno {
+  id: Id;
+  fecha: string;
+  hora_inicio: string;
+  hora_fin: string;
+  estado_sesion: string | null;
+  proceso_id: Id;
+  proyecto_id: Id;
+  asistencia: {
+    id: Id | null;
+    estado: string | null;
+    check_in_at: string | null;
+    check_out_at: string | null;
+    minutos_validados: number | null;
+  } | null;
 }
+
+export interface AISesionesProyectoOk {
+  ok: true;
+  ep_sede_id: Id;
+  proyecto_id: Id;
+  expediente_id: Id;
+  sesiones: AISesionProyectoAlumno[];
+}
+
+export type AISesionesProyectoResponse = AISesionesProyectoOk | ApiFail;

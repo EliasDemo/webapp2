@@ -49,7 +49,9 @@ import {
   JustificarAsistenciaResponse,
   BulkEnrollStats,
   BulkEnrolResponseData,
+  CalificarEvaluacionResponse,
 } from '../models/proyecto.models';
+
 import { API_URL } from '../../../core/tokens/api-url.token';
 
 @Injectable({ providedIn: 'root' })
@@ -492,6 +494,28 @@ obtenerProyecto(id: Id): Observable<ApiResponse<VmProyecto>> {
       payload
     );
   }
+
+  /** 🆕 Calificar una EVALUACION / MIXTO de un proceso */
+  calificarEvaluacion(
+    procesoId: Id,
+    payload: {
+      sesion_id: Id;
+      codigo?: string;
+      expediente_id?: Id;
+      nota: number;
+      otorgar_horas?: boolean;
+      ajustar_a_minutos_sesion?: boolean;
+    }
+  ): Observable<CalificarEvaluacionResponse> {
+    return this.http.post<CalificarEvaluacionResponse>(
+      `${this.base}/vm/procesos/${procesoId}/calificar`,
+      payload
+    );
+  }
+
+
+
+
 
   /** Poll condicional con ETag/If-None-Match */
   listarAsistenciasSesionPoll(

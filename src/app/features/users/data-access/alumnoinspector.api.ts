@@ -19,6 +19,7 @@ import {
   AIInscribirEventoPayload,
   AIInscribirEventoResponse,
   AIUpdateEventoParticipacionResponse,
+  AISesionesProyectoResponse,
 } from '../models/alumnoinspector.models';
 
 @Injectable({ providedIn: 'root' })
@@ -126,4 +127,28 @@ export class AlumnoInspectorApiService {
       { estado }
     );
   }
+
+
+    /** GET /api/vm/inspeccion/proyectos/{proyecto}/sesiones */
+  getSesionesProyectoAlumno(
+    proyectoId: Id,
+    opts: { ep_sede_id?: Id | null; expediente_id?: Id | null; codigo?: string | null }
+  ): Observable<AISesionesProyectoResponse> {
+    let params = new HttpParams();
+    if (opts.ep_sede_id != null) {
+      params = params.set('ep_sede_id', String(opts.ep_sede_id));
+    }
+    if (opts.expediente_id != null) {
+      params = params.set('expediente_id', String(opts.expediente_id));
+    }
+    if (opts.codigo) {
+      params = params.set('codigo', opts.codigo);
+    }
+    return this.http.get<AISesionesProyectoResponse>(
+      `${this.base}/vm/inspeccion/proyectos/${proyectoId}/sesiones`,
+      { params }
+    );
+  }
+
+
 }

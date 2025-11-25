@@ -1,6 +1,17 @@
-import { Component, computed, inject, signal, OnDestroy } from '@angular/core';
-import { NgIf } from '@angular/common';
-import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
+import {
+  Component,
+  computed,
+  inject,
+  signal,
+  OnDestroy,
+} from '@angular/core';
+import { NgIf, NgClass } from '@angular/common';
+import {
+  ReactiveFormsModule,
+  FormControl,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { AuthApi } from '../data-access/auth.api';
@@ -10,9 +21,8 @@ import { FooterToastService } from '../../../core/layout/footer/footer-toast.ser
 @Component({
   standalone: true,
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule, NgIf],
+  imports: [ReactiveFormsModule, NgIf, NgClass],
   templateUrl: './login.page.html',
-  styleUrls: ['./login.page.scss'],
 })
 export class LoginPage implements OnDestroy {
   private api = inject(AuthApi);
@@ -21,15 +31,21 @@ export class LoginPage implements OnDestroy {
   private footerToast = inject(FooterToastService);
 
   // idioma actual (opcional)
-  lang: string = document.documentElement.lang || 'es';
+  lang: string = document?.documentElement?.lang || 'es';
 
   // paso / estado UI
   private _step = signal<1 | 2>(1);
   step = this._step.asReadonly();
+
   showPassword = signal(false);
 
-  // error específico de login (mensaje devuelto por el backend)
-  loginError = signal<string>('');
+  // errores
+  loginError = signal<string>('');   // errores de login (password / bloqueo)
+  lookupError = signal<string>('');  // errores de búsqueda de usuario
+
+  // estados de carga
+  loadingLookup = signal(false);
+  loadingLogin = signal(false);
 
   // forms
   lookupForm = new FormGroup({
@@ -38,6 +54,7 @@ export class LoginPage implements OnDestroy {
       validators: [Validators.required],
     }),
   });
+
   loginForm = new FormGroup({
     password: new FormControl<string>('', {
       nonNullable: true,
@@ -82,6 +99,19 @@ export class LoginPage implements OnDestroy {
     this.showPassword.update((v) => !v);
   }
 
+  // limpiar errores al escribir
+  onUsernameChange() {
+    if (this.lookupError()) {
+      this.lookupError.set('');
+    }
+  }
+
+  onPasswordChange() {
+    if (!this.isLocked() && this.loginError()) {
+      this.loginError.set('');
+    }
+  }
+
   // acciones
   submitLookup() {
     if (this.lookupForm.invalid) {
@@ -90,12 +120,19 @@ export class LoginPage implements OnDestroy {
     }
 
     const username = this.username.value.trim();
+    if (!username) {
+      this.lookupError.set('Ingresa tu usuario institucional.');
+      return;
+    }
+
+    this.loadingLookup.set(true);
+    this.lookupError.set('');
+
     this.api.lookup({ username }).subscribe({
       next: (res) => {
         this._fullName.set(res.user.full_name);
         this._profilePhoto.set(res.user.profile_photo ?? null);
 
-        // rol principal si existe, sino primer rol
         const principal = res.user.rol_principal ?? res.user.roles?.[0] ?? null;
         this._rol.set(principal);
 
@@ -104,12 +141,19 @@ export class LoginPage implements OnDestroy {
 
         this._step.set(2);
         this.loginError.set('');
+        this.loadingLookup.set(false);
       },
       error: (err) => {
+        this.loadingLookup.set(false);
+
         if (err?.status === 404) {
-          this.alerts.warn('Usuario no encontrado.');
+          const msg = 'Usuario no encontrado. Verifica tu usuario institucional.';
+          this.lookupError.set(msg);
+          this.alerts.warn(msg);
         } else {
-          this.alerts.error('No se pudo verificar el usuario.');
+          const msg = 'No se pudo verificar el usuario. Inténtalo nuevamente.';
+          this.lookupError.set(msg);
+          this.alerts.error(msg);
         }
       },
     });
@@ -119,6 +163,7 @@ export class LoginPage implements OnDestroy {
     this.loginForm.reset();
     this.showPassword.set(false);
     this.loginError.set('');
+    this.loadingLogin.set(false);
     this._step.set(1);
   }
 
@@ -133,8 +178,12 @@ export class LoginPage implements OnDestroy {
       password: this.password.value,
     };
 
+    this.loadingLogin.set(true);
+    this.loginError.set('');
+
     this.api.login(payload).subscribe({
       next: () => {
+        this.loadingLogin.set(false);
         this.loginError.set('');
         this.password.reset();
         this.showPassword.set(false);
@@ -145,22 +194,19 @@ export class LoginPage implements OnDestroy {
         });
       },
       error: (err) => {
-        if (err?.status === 422) {
-          // ValidationException de Laravel
-          const msg =
-            err.error?.errors?.credentials?.[0] ??
-            'Credenciales inválidas.';
+        this.loadingLogin.set(false);
 
+        if (err?.status === 422) {
+          const msg =
+            err.error?.errors?.credentials?.[0] ?? 'Credenciales inválidas.';
           this.loginError.set(msg);
           this.alerts.warn(msg);
-
           this.password.reset();
           this.showPassword.set(false);
         } else {
-          this.loginError.set(
-            'Error al iniciar sesión. Intenta nuevamente.'
-          );
-          this.alerts.error('No se pudo iniciar sesión.');
+          const msg = 'Error al iniciar sesión. Intenta nuevamente.';
+          this.loginError.set(msg);
+          this.alerts.error(msg);
         }
       },
     });
@@ -177,6 +223,6 @@ export class LoginPage implements OnDestroy {
   }
 
   ngOnDestroy() {
-    // ya no usamos timers de bloqueo local
+    // no hay recursos manuales que limpiar
   }
 }

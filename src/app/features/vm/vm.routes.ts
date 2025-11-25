@@ -17,14 +17,12 @@ export const VM_PROYECTOS_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/proyecto-wizard/proyecto-wizard.page').then(m => m.ProyectoWizardPage),
       },
-
       {
         path: 'proyectos/:proyectoId/registrantes',
         loadComponent: () =>
           import('./pages/proyecto-list-registrants/proyecto-list-registrants')
             .then(m => m.ProyectoListRegistrantsPage),
       },
-
       {
         path: 'proyectos/:proyectoId',
         loadComponent: () =>
@@ -48,7 +46,15 @@ export const VM_PROYECTOS_ROUTES: Routes = [
           import('./pages/proyecto-assistance/proyecto-assistance.page').then(m => m.ProyectoAssistancePage),
       },
 
-      // 🔹 AQUÍ montas las rutas de eventos bajo /vm/eventos/...
+      // ⭐️ NUEVA RUTA PARA CALIFICAR SESIÓN DE EVALUACIÓN
+      {
+        path: 'procesos/:procesoId/sesiones/:sesionId/calificar',
+        loadComponent: () =>
+          import('./pages/proyecto-evaluacion/proyecto-evaluacion.page')
+            .then(m => m.ProyectoEvaluacionPage),
+      },
+
+      // ─── Eventos ───
       {
         path: 'eventos',
         loadChildren: () =>
