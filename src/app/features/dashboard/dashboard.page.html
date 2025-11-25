@@ -1,171 +1,151 @@
 <!-- dashboard.page.html -->
 
 <!-- Loader -->
-<div *ngIf="loading" class="text-center py-5">
-  <div class="spinner-border" role="status">
-    <span class="visually-hidden">Cargando...</span>
-  </div>
+<div *ngIf="loading" class="flex justify-center items-center py-12">
+  <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+  <span class="ml-2 text-gray-600">Cargando...</span>
 </div>
 
 <!-- Error -->
-<div *ngIf="!loading && error" class="alert alert-danger mt-3">
+<div *ngIf="!loading && error" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
   {{ error }}
 </div>
 
 <!-- Contenido principal -->
-<div *ngIf="!loading && !error && data as d; else noData" class="dashboard">
+<div *ngIf="!loading && !error && data as d; else noData" class="dashboard p-4 md:p-6">
 
   <!-- Header / contexto -->
-  <section class="mb-4">
-    <h2 class="mb-1">Panel de actividades</h2>
+  <section class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">Panel de actividades</h2>
 
-    <p class="text-muted mb-0">
-      Periodo:
-      <strong>{{ d.contexto.periodo.codigo }}</strong>
+    <div class="flex flex-col sm:flex-row sm:items-center gap-2 text-gray-600">
+      <p class="mb-0">
+        Periodo:
+        <strong class="font-semibold">{{ d.contexto.periodo.codigo }}</strong>
 
-      <span *ngIf="d.contexto.periodo.vigente" class="badge bg-success ms-2">
-        Vigente
-      </span>
-      <span *ngIf="!d.contexto.periodo.vigente" class="badge bg-secondary ms-2">
-        No vigente
-      </span>
-    </p>
+        <span *ngIf="d.contexto.periodo.vigente" class="ml-2 px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+          Vigente
+        </span>
+        <span *ngIf="!d.contexto.periodo.vigente" class="ml-2 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+          No vigente
+        </span>
+      </p>
 
-    <small class="text-muted">
-      Actualizado: {{ d.contexto.ahora }}
-    </small>
+      <span class="hidden sm:block text-gray-400">•</span>
+      <small class="text-gray-500">
+        Actualizado: {{ d.contexto.ahora }}
+      </small>
+    </div>
   </section>
 
   <!-- Contadores -->
-  <section class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <div class="small text-muted">Proyectos inscritos</div>
-          <div class="fs-3 fw-semibold">
-            {{ d.contadores.proyectos_inscritos }}
-          </div>
-        </div>
+  <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <div class="text-sm text-gray-500">Proyectos inscritos</div>
+      <div class="text-3xl font-bold text-gray-800 mt-1">
+        {{ d.contadores.proyectos_inscritos }}
       </div>
     </div>
 
-    <div class="col-6 col-md-3">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <div class="small text-muted">Horas validadas</div>
-          <div class="fs-3 fw-semibold">
-            {{ d.contadores.horas_validadas_h | number: '1.0-2' }} h
-          </div>
-          <small class="text-muted">
-            ({{ d.contadores.horas_validadas_min }} min)
-          </small>
-        </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <div class="text-sm text-gray-500">Horas validadas</div>
+      <div class="text-3xl font-bold text-gray-800 mt-1">
+        {{ d.contadores.horas_validadas_h | number: '1.0-2' }} h
+      </div>
+      <div class="text-xs text-gray-500 mt-1">
+        ({{ d.contadores.horas_validadas_min }} min)
       </div>
     </div>
 
-    <div class="col-6 col-md-3">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <div class="small text-muted">Faltas en eventos</div>
-          <div class="fs-3 fw-semibold text-danger">
-            {{ d.contadores.faltas_eventos }}
-          </div>
-        </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <div class="text-sm text-gray-500">Faltas en eventos</div>
+      <div class="text-3xl font-bold text-red-600 mt-1">
+        {{ d.contadores.faltas_eventos }}
       </div>
     </div>
 
-    <div class="col-6 col-md-3">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <div class="small text-muted">Faltas en proyectos</div>
-          <div class="fs-3 fw-semibold text-danger">
-            {{ d.contadores.faltas_proyectos }}
-          </div>
-        </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <div class="text-sm text-gray-500">Faltas en proyectos</div>
+      <div class="text-3xl font-bold text-red-600 mt-1">
+        {{ d.contadores.faltas_proyectos }}
       </div>
     </div>
   </section>
 
   <!-- Listas de eventos / proyectos -->
-  <div class="row g-4">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
     <!-- Eventos -->
-    <div class="col-lg-6">
+    <div class="space-y-6">
 
       <!-- Eventos inscritos -->
-      <section>
-        <h3 class="h5 mb-3">Eventos inscritos</h3>
+      <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Eventos inscritos</h3>
 
-        <div *ngIf="eventosInscritos.length; else noEventosInscritos">
-          <div class="list-group small">
-            <a
-              *ngFor="let ev of eventosInscritos"
-              class="list-group-item list-group-item-action flex-column align-items-start"
-            >
-              <div class="d-flex w-100 justify-content-between">
-                <h4 class="h6 mb-1">{{ ev.titulo }}</h4>
-                <span class="badge bg-light text-muted">{{ ev.codigo }}</span>
-              </div>
+        <div *ngIf="eventosInscritos.length; else noEventosInscritos" class="space-y-3">
+          <div *ngFor="let ev of eventosInscritos"
+               class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+            <div class="flex justify-between items-start">
+              <h4 class="font-medium text-gray-800">{{ ev.titulo }}</h4>
+              <span class="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-md">{{ ev.codigo }}</span>
+            </div>
 
-              <p class="mb-1" *ngIf="ev.descripcion_corta">
-                {{ ev.descripcion_corta }}
-              </p>
+            <p class="mt-2 text-gray-600 text-sm" *ngIf="ev.descripcion_corta">
+              {{ ev.descripcion_corta }}
+            </p>
 
-              <small class="text-muted">
-                {{ ev.sesiones?.[0]?.fecha }}
-                · {{ ev.modalidad || 'Presencial' }}
-                <span *ngIf="ev.progreso">
-                  · Progreso: {{ ev.progreso.porcentaje }}%
-                  ({{ ev.progreso.asistidas }}/{{ ev.progreso.totales }} sesiones)
-                </span>
-              </small>
-            </a>
+            <div class="mt-2 text-xs text-gray-500">
+              <span>{{ ev.sesiones?.[0]?.fecha }}</span>
+              <span class="mx-1">•</span>
+              <span>{{ ev.modalidad || 'Presencial' }}</span>
+              <span *ngIf="ev.progreso" class="ml-2">
+                • Progreso: {{ ev.progreso.porcentaje }}%
+                ({{ ev.progreso.asistidas }}/{{ ev.progreso.totales }} sesiones)
+              </span>
+            </div>
           </div>
         </div>
 
         <ng-template #noEventosInscritos>
-          <p class="text-muted small mb-0">
+          <p class="text-gray-500 text-sm">
             Aún no estás inscrito en ningún evento.
           </p>
         </ng-template>
       </section>
 
       <!-- Eventos inscribibles -->
-      <section class="mt-4">
-        <h3 class="h5 mb-3">Eventos disponibles para inscribirte</h3>
+      <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Eventos disponibles para inscribirte</h3>
 
-        <div *ngIf="eventosInscribibles.length; else noEventosDisponibles">
-          <div class="list-group small">
-            <div
-              *ngFor="let ev of eventosInscribibles"
-              class="list-group-item flex-column align-items-start"
-            >
-              <div class="d-flex w-100 justify-content-between">
-                <h4 class="h6 mb-1">{{ ev.titulo }}</h4>
-                <span class="badge bg-primary-subtle text-primary">
-                  {{ ev.modalidad || 'Presencial' }}
-                </span>
-              </div>
+        <div *ngIf="eventosInscribibles.length; else noEventosDisponibles" class="space-y-3">
+          <div *ngFor="let ev of eventosInscribibles"
+               class="border border-gray-200 rounded-lg p-4">
+            <div class="flex justify-between items-start">
+              <h4 class="font-medium text-gray-800">{{ ev.titulo }}</h4>
+              <span class="px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded-md">
+                {{ ev.modalidad || 'Presencial' }}
+              </span>
+            </div>
 
-              <p class="mb-1" *ngIf="ev.descripcion_corta">
-                {{ ev.descripcion_corta }}
-              </p>
+            <p class="mt-2 text-gray-600 text-sm" *ngIf="ev.descripcion_corta">
+              {{ ev.descripcion_corta }}
+            </p>
 
-              <small class="text-muted">
-                Inscripción:
-                <span *ngIf="ev.inscripcion_desde">
-                  desde {{ ev.inscripcion_desde }}
-                </span>
-                <span *ngIf="ev.inscripcion_hasta">
-                  · hasta {{ ev.inscripcion_hasta }}
-                </span>
-              </small>
+            <div class="mt-2 text-xs text-gray-500">
+              Inscripción:
+              <span *ngIf="ev.inscripcion_desde">
+                desde {{ ev.inscripcion_desde }}
+              </span>
+              <span *ngIf="ev.inscripcion_hasta">
+                <span class="mx-1">•</span>
+                hasta {{ ev.inscripcion_hasta }}
+              </span>
             </div>
           </div>
         </div>
 
         <ng-template #noEventosDisponibles>
-          <p class="text-muted small mb-0">
+          <p class="text-gray-500 text-sm">
             No hay eventos disponibles para inscribirte en este periodo.
           </p>
         </ng-template>
@@ -173,78 +153,73 @@
     </div>
 
     <!-- Proyectos -->
-    <div class="col-lg-6">
+    <div class="space-y-6">
 
       <!-- Proyectos inscritos -->
-      <section>
-        <h3 class="h5 mb-3">Proyectos inscritos</h3>
+      <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Proyectos inscritos</h3>
 
-        <div *ngIf="proyectosInscritos.length; else noProyectosInscritos">
-          <div class="list-group small">
-            <a
-              *ngFor="let p of proyectosInscritos"
-              class="list-group-item list-group-item-action flex-column align-items-start"
-            >
-              <div class="d-flex w-100 justify-content-between">
-                <h4 class="h6 mb-1">{{ p.titulo }}</h4>
-                <span class="badge bg-light text-muted">{{ p.codigo }}</span>
-              </div>
+        <div *ngIf="proyectosInscritos.length; else noProyectosInscritos" class="space-y-3">
+          <div *ngFor="let p of proyectosInscritos"
+               class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+            <div class="flex justify-between items-start">
+              <h4 class="font-medium text-gray-800">{{ p.titulo }}</h4>
+              <span class="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-md">{{ p.codigo }}</span>
+            </div>
 
-              <p class="mb-1" *ngIf="p.descripcion">
-                {{ p.descripcion }}
-              </p>
+            <p class="mt-2 text-gray-600 text-sm" *ngIf="p.descripcion">
+              {{ p.descripcion }}
+            </p>
 
-              <small class="text-muted">
-                Tipo: {{ p.tipo }}
-                · Modalidad: {{ p.modalidad || 'Presencial' }}
-                · Progreso: {{ p.progreso?.porcentaje ?? 0 }}%
-              </small>
-            </a>
+            <div class="mt-2 text-xs text-gray-500">
+              <span>Tipo: {{ p.tipo }}</span>
+              <span class="mx-1">•</span>
+              <span>Modalidad: {{ p.modalidad || 'Presencial' }}</span>
+              <span class="mx-1">•</span>
+              <span>Progreso: {{ p.progreso?.porcentaje ?? 0 }}%</span>
+            </div>
           </div>
         </div>
 
         <ng-template #noProyectosInscritos>
-          <p class="text-muted small mb-0">
+          <p class="text-gray-500 text-sm">
             Aún no estás inscrito en ningún proyecto.
           </p>
         </ng-template>
       </section>
 
       <!-- Proyectos inscribibles -->
-      <section class="mt-4">
-        <h3 class="h5 mb-3">Proyectos disponibles</h3>
+      <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Proyectos disponibles</h3>
 
-        <div *ngIf="proyectosInscribibles.length; else noProyectosDisponibles">
-          <div class="list-group small">
-            <div
-              *ngFor="let p of proyectosInscribibles"
-              class="list-group-item flex-column align-items-start"
-            >
-              <div class="d-flex w-100 justify-content-between">
-                <h4 class="h6 mb-1">{{ p.titulo }}</h4>
-                <span class="badge bg-info-subtle text-info">
-                  Nivel:
-                  <ng-container *ngIf="p.ciclos?.length; else sinNivel">
-                    {{ p.ciclos.join(', ') }}
-                  </ng-container>
-                  <ng-template #sinNivel>N/D</ng-template>
-                </span>
-              </div>
+        <div *ngIf="proyectosInscribibles.length; else noProyectosDisponibles" class="space-y-3">
+          <div *ngFor="let p of proyectosInscribibles"
+               class="border border-gray-200 rounded-lg p-4">
+            <div class="flex justify-between items-start">
+              <h4 class="font-medium text-gray-800">{{ p.titulo }}</h4>
+              <span class="px-2 py-1 text-xs bg-indigo-50 text-indigo-600 rounded-md">
+                Nivel:
+                <ng-container *ngIf="p.ciclos?.length; else sinNivel">
+                  {{ p.ciclos.join(', ') }}
+                </ng-container>
+                <ng-template #sinNivel>N/D</ng-template>
+              </span>
+            </div>
 
-              <p class="mb-1" *ngIf="p.descripcion">
-                {{ p.descripcion }}
-              </p>
+            <p class="mt-2 text-gray-600 text-sm" *ngIf="p.descripcion">
+              {{ p.descripcion }}
+            </p>
 
-              <small class="text-muted">
-                Tipo: {{ p.tipo }}
-                · Modalidad: {{ p.modalidad || 'Presencial' }}
-              </small>
+            <div class="mt-2 text-xs text-gray-500">
+              <span>Tipo: {{ p.tipo }}</span>
+              <span class="mx-1">•</span>
+              <span>Modalidad: {{ p.modalidad || 'Presencial' }}</span>
             </div>
           </div>
         </div>
 
         <ng-template #noProyectosDisponibles>
-          <p class="text-muted small mb-0">
+          <p class="text-gray-500 text-sm">
             No hay proyectos disponibles para inscribirte en este periodo.
           </p>
         </ng-template>
@@ -255,7 +230,9 @@
 
 <!-- Fallback si no hay data -->
 <ng-template #noData>
-  <p class="text-muted">
-    No se encontraron datos para el dashboard.
-  </p>
+  <div class="p-8 text-center">
+    <p class="text-gray-500">
+      No se encontraron datos para el dashboard.
+    </p>
+  </div>
 </ng-template>
