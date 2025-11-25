@@ -28,7 +28,7 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () =>
           import('./features/dashboard/dashboard.page').then(
-            m => m.DashboardPage
+            m => m.AlumnoDashboardPage
           ),
       },
       {
